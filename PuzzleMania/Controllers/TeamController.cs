@@ -39,14 +39,14 @@ namespace PuzzleMania.Controllers
                 return View("ChooseTeam", incompleteTeams);
             }
 
-            // No incomplete teams, show the form to create a new team
+            // No incomplete teams & user has no team, show the form to create a new team
             return View("CreateTeam");
         }
 
-        public IActionResult TeamStats()
+        public async Task<IActionResult> TeamStats()
         {
-            // Logic to retrieve team statistics and pass them to the view
-            return View();
+            var teamStats = await _teamRepository.GetAll();
+            return View(teamStats);
         }
 
 

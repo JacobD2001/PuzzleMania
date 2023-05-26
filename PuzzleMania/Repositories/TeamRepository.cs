@@ -38,10 +38,12 @@ namespace PuzzleMania.Repositories
             return false;
         }
 
-        public async Task<IEnumerable<Team>> GetAll()
+        public async Task<IEnumerable<string>> GetAll()
         {
-            return await _context.Teams.ToListAsync();
+            var teams = await _context.Teams.ToListAsync();
+            return teams.Select(t => t.TeamName);
         }
+
 
         public async Task<IEnumerable<Team>> GetIncompleteTeams()
         {
