@@ -5,6 +5,7 @@ using PuzzleMania.Helpers;
 using PuzzleMania.Interfaces;
 using PuzzleMania.Models;
 using PuzzleMania.Repositories;
+using PuzzleMania.ViewModels;
 
 namespace PuzzleMania.Controllers
 {
@@ -12,13 +13,11 @@ namespace PuzzleMania.Controllers
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITeamRepository _teamRepository;
-        private readonly PuzzleManiaContext _context;
 
-        public TeamController(IHttpContextAccessor httpContextAccessor, ITeamRepository teamRepository, PuzzleManiaContext context)
+        public TeamController(IHttpContextAccessor httpContextAccessor, ITeamRepository teamRepository)
         {
             _httpContextAccessor = httpContextAccessor;
             _teamRepository = teamRepository;
-            _context = context;
         }
 
         [HttpGet]
@@ -33,7 +32,7 @@ namespace PuzzleMania.Controllers
             var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
             // Check if the user has already joined a team
-            if (_teamRepository.CheckIfUserHasNullTeamId(currentUserId))// returns false meaning that curuser has joined a team
+            if (await _teamRepository.CheckIfUserHasNullTeamId(currentUserId))// returns false meaning that curuser has joined a team
             {
                 TempData["Message"] = "You have already joined a team.";
                 return RedirectToAction("TeamStats");
@@ -52,12 +51,44 @@ namespace PuzzleMania.Controllers
         }
 
         //this method shows the team stats(names) and gets called when there are incomplete teams and user has to choose a team
+        //TODO - this method need change name to TeamList and it will be called when player has not yet joined a team && there are not full teams)
+        [HttpGet]
+        public async Task<IActionResult> ChooseTeam()
+        {
+            var chooseTeam = await _teamRepository.GetAll();
+            return View(chooseTeam);
+        }
+
         [HttpGet]
         public async Task<IActionResult> TeamStats()
         {
-            var teamStats = await _teamRepository.GetAll();
-            return View(teamStats);
+            var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
+
+            // Check if the user has already joined a team
+            if (await _teamRepository.CheckIfUserHasNullTeamId(currentUserId))
+            {
+                TempData["Message"] = "You have not joined a team yet.";
+                return RedirectToAction("JoinTeam");
+            }
+
+            // Retrieve the team the user has joined
+            var team = await _teamRepository.GetTeamByUserId(currentUserId);
+
+            // Retrieve the list of users in the team
+            var teamMembers = await _teamRepository.GetTeamMembers(team.TeamId);
+
+            // Pass the team and team members to the view
+            var teamStatsViewModel = new TeamStatsViewModel
+            {
+                TeamName= team.TeamName,
+                TeamSize= team.TeamSize,
+                TeamMembers = teamMembers,
+                TotalPoints = team.TotalPoints
+            };
+
+            return View(teamStatsViewModel);
         }
+
 
 
         [HttpPost]
@@ -65,6 +96,61 @@ namespace PuzzleMania.Controllers
         {
             var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
+
+            // Logic to handle the form submission
+            if (!string.IsNullOrEmpty(teamName))
+            {
+                // Create the new team with the provided name and assaigning user to a team
+                var newTeam = new Team
+                {
+                    TeamName = teamName,
+                    UserId = currentUserId,
+                    TeamSize = 1
+
+                };
+
+                _teamRepository.Add(newTeam);
+                TempData["Message"] = "Team created successfully!";
+                return RedirectToAction("TeamStats");
+            }
+            else
+            {
+                if (currentUserId != null)
+                {
+                    var teamToJoin = await _teamRepository.GetTeamByName(teamName);  // Retrieve the team the user wants to join based on their selection
+
+                    if (teamToJoin != null && teamToJoin.TeamSize < 2)
+                    {
+                        _teamRepository.AddUserToTeam(currentUserId, teamToJoin.TeamId);
+                        await _teamRepository.IncreaseTeamSize(teamToJoin.TeamId);
+                        _teamRepository.Save();
+
+                        TempData["Message"] = "Joined the team successfully!";
+                        return RedirectToAction("TeamStats");
+
+                    }
+                    else
+                    {
+                        TempData["Message"] = "Selected team does not exist!";
+                        return View();
+                    }
+                }
+
+                return View();
+            }
+
+
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CreateTeam()
+        {
+            return View();
+        }
+       /* [HttpPost]
+        public async Task<IActionResult> CreateTeam()
+        {
+            var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
             // Logic to handle the form submission
             if (!string.IsNullOrEmpty(teamName))
@@ -93,7 +179,7 @@ namespace PuzzleMania.Controllers
                     {
                         //Change this code to use the repository
                         user.TeamId = teamToJoin.TeamId; // Assign the user to the selected team
-                         _teamRepository.Save();
+                        _teamRepository.Save();
 
                         TempData["Message"] = "Joined the team successfully!";
                         return RedirectToAction("TeamStats");
@@ -108,8 +194,6 @@ namespace PuzzleMania.Controllers
 
                 return RedirectToAction("TeamStats");
             }
-
-
-        }
+        }*/
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using PuzzleMania.Areas.Identity.Data;
 using PuzzleMania.Data;
 using PuzzleMania.Interfaces;
 using PuzzleMania.Models;
@@ -16,14 +17,15 @@ namespace PuzzleMania.Repositories
             _context = context;
         }
 
-        public bool CheckIfUserHasNullTeamId(string currentUserId)
+        public async Task<bool> CheckIfUserHasNullTeamId(string currentUserId)
         {
-            var user = _context.Users.SingleOrDefaultAsync(u => u.Id == currentUserId);
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Id == currentUserId);
 
             // If User exists
             if (user != null)
             {
                 var teamId = _context.Users
+                    .AsNoTracking()
                 .Where(u => u.Id == currentUserId)
                 .Select(u => u.TeamId)
                 .FirstOrDefaultAsync();
@@ -39,22 +41,25 @@ namespace PuzzleMania.Repositories
             return false;
         }
 
-        public async Task<IEnumerable<string>> GetAll()
+        public async Task<IEnumerable<Team>> GetAll()
         {
             var teams = await _context.Teams.ToListAsync();
-            return teams.Select(t => t.TeamName);
+            return teams;
         }
+
 
 
         public async Task<IEnumerable<Team>> GetIncompleteTeams()
         {
             var incompleteTeams = await _context.Users
+                .AsNoTracking()
                 .GroupBy(u => u.TeamId) // Group users by TeamId
                 .Where(g => g.Count() <= 1) // Filter groups where the count is less than or equal to 1
                 .Select(g => g.Key) // Select the TeamId of incomplete teams
                 .ToListAsync();
 
             var teams = await _context.Teams
+                .AsNoTracking()
                 .Where(t => incompleteTeams.Contains(t.TeamId)) // Retrieve the incomplete teams
                 .ToListAsync();
 
@@ -86,6 +91,58 @@ namespace PuzzleMania.Repositories
             return Save();
         }
 
+        public void AddUserToTeam(string userId, int teamId)
+        {
+            var user = _context.Users.SingleOrDefault(u => u.Id == userId);
+            if (user != null)
+            {
+                user.TeamId = teamId;
+                _context.SaveChanges();
+            }
+        }
+
+        public async Task IncreaseTeamSize(int teamId)
+        {
+            var team = await _context.Teams.FindAsync(teamId);
+            if (team != null)
+            {
+                team.TeamSize += 1;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<Team> GetTeamByUserId(string userId)
+        {
+            return await _context.Teams
+                .FirstOrDefaultAsync(t => t.UserId == userId);
+        }
+
+        /*    public async Task<IEnumerable<string>> GetTeamMembers(int teamId)
+            {
+                var teamMembers = await _context.Teams
+                    .Where(t => t.TeamId == teamId)
+                    .SelectMany(t => t.UserId)
+                    .Select(u => u .Split('@')[0]) // Extract the email without the "@" part
+                    .ToListAsync();
+
+                return teamMembers;
+            }*/
+
+
+        public async Task<IEnumerable<PuzzleManiaUser>> GetTeamMembers(int teamId)
+        {
+            return await _context.Users
+                .Where(u => u.TeamId == teamId).ToListAsync();
+        }
+
+
+
+        // Find the user based on the current logged in user
+     /*   public async Task<User> GetUserById(string currentUserId)
+        {
+            return await _context.Users.SingleOrDefaultAsync(u => u.Id == currentUserId);
+        }
+*/
 
 
         /*   public async Task<Team> GetByIdAsync(int id)

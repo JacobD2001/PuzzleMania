@@ -1,10 +1,19 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-@if (TempData["Message"] != null)
-{
-    <div class="alert alert-success">@TempData["Message"]</div>
-}
-<h1>TEAM STATS TEAM PAGE</h1>
+﻿@using PuzzleMania.ViewModels
+
+<h1>TEAMS STATS PAGE</h1>
+@model TeamStatsViewModel
+
+<h1>Team Stats</h1>
+
+<p>Team Name: @Model.TeamName</p>
+<p>Current Number of Team Members: @Model.TeamSize</p>
+
+<h3>Team Members:</h3>
+<ul>
+    @foreach (var member in Model.TeamMembers)
+    {
+            <li>@member</li>
+    }
+</ul>
+
+<p>Total Points from Last Finished Game: @Model.TotalPoints</p>
