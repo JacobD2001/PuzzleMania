@@ -2,15 +2,23 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PuzzleMania.Areas.Identity.Data;
 using PuzzleMania.Data;
+using PuzzleMania.Interfaces;
+using PuzzleMania.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("PuzzleManiaContextConnection") ?? throw new InvalidOperationException("Connection string 'PuzzleManiaContextConnection' not found.");
 
+//adding db context
 builder.Services.AddDbContext<PuzzleManiaContext>(options => options.UseSqlServer(connectionString));
 
+//adding identity
 builder.Services.AddDefaultIdentity<PuzzleManiaUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<PuzzleManiaContext>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+//add services for DI
+builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 
 var app = builder.Build();
 

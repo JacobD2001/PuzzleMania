@@ -1,0 +1,35 @@
+﻿@model IEnumerable<Team>
+
+<h2>Choose a Team</h2>
+<h1>JOIN TEAM PAGE</h1>
+@if (Model.Any())
+{
+    <p>Select a team to join:</p>
+
+    <form method="post">
+        <div class="form-group">
+            <label for="teamName">Team Name:</label>
+            <select name="teamName" id="teamName" class="form-control">
+                @foreach (var team in Model)
+                {
+                    <option value="@team.TeamName">@team.TeamName</option>
+                }
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Join Team</button>
+    </form>
+}
+else
+{
+    <p>No incomplete teams available. Create a new team:</p>
+
+    <form method="post" action="/Team/JoinTeam">
+        <div class="form-group">
+            <label for="newTeamName">New Team Name:</label>
+            <input type="text" name="teamName" id="newTeamName" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create Team</button>
+    </form>
+}

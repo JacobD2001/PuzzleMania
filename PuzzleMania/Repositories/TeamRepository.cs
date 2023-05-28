@@ -3,6 +3,7 @@ using PuzzleMania.Data;
 using PuzzleMania.Interfaces;
 using PuzzleMania.Models;
 using System.Drawing.Drawing2D;
+using System.Linq;
 
 namespace PuzzleMania.Repositories
 {
@@ -59,6 +60,39 @@ namespace PuzzleMania.Repositories
 
             return teams;
         }
+
+        public bool Add(Team team)
+        {
+            _context.Teams.Add(team);
+            return _context.SaveChanges() > 0; // at least one change needs to be made to return true
+        }
+
+        // Method to retrieve the team the user wants to join based on their selection
+
+        public async Task<Team> GetTeamByName(string teamName)
+        {
+            return await _context.Teams
+                .FirstOrDefaultAsync(t => t.TeamName == teamName);
+        }
+
+        public bool Save()
+        {
+            return (_context.SaveChanges() > 0);
+        }
+
+        public bool Update(Team team)
+        {
+            _context.Update(team);
+            return Save();
+        }
+
+
+
+        /*   public async Task<Team> GetByIdAsync(int id)
+           {
+               return await _context.Teams
+                   .FirstOrDefaultAsync(t => t.TeamId == id);
+           }*/
 
 
     }
