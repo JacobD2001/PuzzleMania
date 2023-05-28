@@ -17,54 +17,27 @@ namespace PuzzleMania.Repositories
             _context = context;
         }
 
-        public async Task<bool> CheckIfUserHasNullTeamId(string currentUserId)
+        //returns true if user has already joined a team
+        public async Task<bool> CheckIfUserHasTeam(string currentUserId)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Id == currentUserId);
-
-            // If User exists
-            if (user != null)
-            {
-                var teamId = _context.Users
-                    .AsNoTracking()
-                .Where(u => u.Id == currentUserId)
-                .Select(u => u.TeamId)
-                .FirstOrDefaultAsync();
-
-                if (teamId == null)
-                {
-                    // User has a NULL value in the TeamId column
-                    return true;
-                }
-            }
-
-            // User does not have a NULL value in the TeamId column or user not found = User has already joined a team
-            return false;
+            var team = await _context.Teams.FirstOrDefaultAsync(t => t.UserId == currentUserId);
+            return team != null;
         }
 
         public async Task<IEnumerable<Team>> GetAll()
         {
-            var teams = await _context.Teams.ToListAsync();
-            return teams;
+            return await _context.Teams.ToListAsync();
         }
 
 
 
         public async Task<IEnumerable<Team>> GetIncompleteTeams()
         {
-            var incompleteTeams = await _context.Users
-                .AsNoTracking()
-                .GroupBy(u => u.TeamId) // Group users by TeamId
-                .Where(g => g.Count() <= 1) // Filter groups where the count is less than or equal to 1
-                .Select(g => g.Key) // Select the TeamId of incomplete teams
+            return await _context.Teams
+                .Where(t => t.TeamSize < 2)
                 .ToListAsync();
-
-            var teams = await _context.Teams
-                .AsNoTracking()
-                .Where(t => incompleteTeams.Contains(t.TeamId)) // Retrieve the incomplete teams
-                .ToListAsync();
-
-            return teams;
         }
+
 
         public bool Add(Team team)
         {
@@ -91,15 +64,18 @@ namespace PuzzleMania.Repositories
             return Save();
         }
 
-        public void AddUserToTeam(string userId, int teamId)
+        public async Task<bool> AddUserToTeam(string currentUserId, int teamId)
         {
-            var user = _context.Users.SingleOrDefault(u => u.Id == userId);
-            if (user != null)
+            var team = await _context.Teams.FindAsync(teamId);
+            if (team != null)
             {
-                user.TeamId = teamId;
-                _context.SaveChanges();
+                team.UserId = currentUserId;
+                await _context.SaveChangesAsync();
+                return true;
             }
+            return false;
         }
+
 
         public async Task IncreaseTeamSize(int teamId)
         {
@@ -129,10 +105,10 @@ namespace PuzzleMania.Repositories
             }*/
 
 
-        public async Task<IEnumerable<PuzzleManiaUser>> GetTeamMembers(int teamId)
+        public async Task<IEnumerable<PuzzleManiaUser>> GetTeamMembers(string userId)
         {
             return await _context.Users
-                .Where(u => u.TeamId == teamId).ToListAsync();
+                .Where(u => u.Id == userId).ToListAsync();
         }
 
 
@@ -145,11 +121,11 @@ namespace PuzzleMania.Repositories
 */
 
 
-        /*   public async Task<Team> GetByIdAsync(int id)
+           public async Task<Team> GetByIdAsync(int teamId)
            {
                return await _context.Teams
-                   .FirstOrDefaultAsync(t => t.TeamId == id);
-           }*/
+                   .AsNoTracking().FirstOrDefaultAsync(t => t.TeamId == teamId);
+           }
 
 
     }

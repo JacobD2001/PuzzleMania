@@ -32,7 +32,7 @@ namespace PuzzleMania.Controllers
             var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
             // Check if the user has already joined a team
-            if (await _teamRepository.CheckIfUserHasNullTeamId(currentUserId))// returns false meaning that curuser has joined a team
+            if (await _teamRepository.CheckIfUserHasTeam(currentUserId)) 
             {
                 TempData["Message"] = "You have already joined a team.";
                 return RedirectToAction("TeamStats");
@@ -60,12 +60,16 @@ namespace PuzzleMania.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> TeamStats()
+        public async Task<IActionResult> TeamStats(int teamId)
         {
+            //TODO - why there is a null value
+            var curTeam = await _teamRepository.GetByIdAsync(teamId);
+           //if (curTeam == null) return View("Error");
+
             var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
             // Check if the user has already joined a team
-            if (await _teamRepository.CheckIfUserHasNullTeamId(currentUserId))
+            if (!await _teamRepository.CheckIfUserHasTeam(currentUserId))
             {
                 TempData["Message"] = "You have not joined a team yet.";
                 return RedirectToAction("JoinTeam");
@@ -75,7 +79,7 @@ namespace PuzzleMania.Controllers
             var team = await _teamRepository.GetTeamByUserId(currentUserId);
 
             // Retrieve the list of users in the team
-            var teamMembers = await _teamRepository.GetTeamMembers(team.TeamId);
+            var teamMembers = await _teamRepository.GetTeamMembers(team.UserId);
 
             // Pass the team and team members to the view
             var teamStatsViewModel = new TeamStatsViewModel
@@ -108,6 +112,7 @@ namespace PuzzleMania.Controllers
                     TeamSize = 1
 
                 };
+                
 
                 _teamRepository.Add(newTeam);
                 TempData["Message"] = "Team created successfully!";
@@ -147,6 +152,8 @@ namespace PuzzleMania.Controllers
         {
             return View();
         }
+
+
        /* [HttpPost]
         public async Task<IActionResult> CreateTeam()
         {

@@ -45,7 +45,6 @@ namespace PuzzleMania.Migrations
                     LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
                     AccessFailedCount = table.Column<int>(type: "int", nullable: false),
-                    //TeamId = table.Column<int>(type: "int", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -166,6 +165,8 @@ namespace PuzzleMania.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                         TeamName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                         TeamSize = table.Column<int>(type: "int", nullable: false),
+                        UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                        TotalPoints = table.Column<int>(type: "int", nullable: true, defaultValue: 0)
                 },
                 constraints: table =>
                 {

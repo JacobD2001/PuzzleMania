@@ -16,7 +16,7 @@ namespace PuzzleMania.Migrations
                 type: "int",
                 nullable: true);
 
-            migrationBuilder.CreateTable(
+     /*       migrationBuilder.CreateTable(
                 name: "Team",
                 columns: table => new
                 {
@@ -28,7 +28,7 @@ namespace PuzzleMania.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Team", x => x.TeamId);
-                });
+                });*/
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUsers_TeamId",

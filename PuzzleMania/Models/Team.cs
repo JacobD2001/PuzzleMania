@@ -10,7 +10,7 @@ namespace PuzzleMania.Models
 
         [Range(0, 2, ErrorMessage = "Team size must be 0, 1, or 2.")]
         public int TeamSize { get; set; }
-        public string UserId { get; set;}
+        public string UserId { get; set; }
         public int TotalPoints { get; set; }
 
 

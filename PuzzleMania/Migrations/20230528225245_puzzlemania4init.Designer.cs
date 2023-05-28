@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PuzzleMania.Data;
 
@@ -11,9 +12,11 @@ using PuzzleMania.Data;
 namespace PuzzleMania.Migrations
 {
     [DbContext(typeof(PuzzleManiaContext))]
-    partial class PuzzleManiaContextModelSnapshot : ModelSnapshot
+    [Migration("20230528225245_puzzlemania4init")]
+    partial class puzzlemania4init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -204,6 +207,9 @@ namespace PuzzleMania.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("TeamId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -220,6 +226,8 @@ namespace PuzzleMania.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("TeamId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -300,6 +308,15 @@ namespace PuzzleMania.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("PuzzleMania.Areas.Identity.Data.PuzzleManiaUser", b =>
+                {
+                    b.HasOne("PuzzleMania.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId");
+
+                    b.Navigation("Team");
                 });
 #pragma warning restore 612, 618
         }
