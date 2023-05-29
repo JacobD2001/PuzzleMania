@@ -10,13 +10,13 @@ namespace PuzzleMania.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
+        /*    migrationBuilder.AddColumn<int>(
                 name: "TeamId",
                 table: "AspNetUsers",
                 type: "int",
                 nullable: true);
 
-     /*       migrationBuilder.CreateTable(
+            migrationBuilder.CreateTable(
                 name: "Team",
                 columns: table => new
                 {
@@ -30,7 +30,7 @@ namespace PuzzleMania.Migrations
                     table.PrimaryKey("PK_Team", x => x.TeamId);
                 });*/
 
-            migrationBuilder.CreateIndex(
+         /*   migrationBuilder.CreateIndex(
                 name: "IX_AspNetUsers_TeamId",
                 table: "AspNetUsers",
                 column: "TeamId");
@@ -40,7 +40,7 @@ namespace PuzzleMania.Migrations
                 table: "AspNetUsers",
                 column: "TeamId",
                 principalTable: "Team",
-                principalColumn: "TeamId");
+                principalColumn: "TeamId");*/
         }
 
         /// <inheritdoc />

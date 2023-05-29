@@ -10,17 +10,17 @@ namespace PuzzleMania.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
+    /*        migrationBuilder.DropForeignKey(
                 name: "FK_AspNetUsers_Teams_TeamId",
-                table: "AspNetUsers");
-
+                table: "AspNetUsers");*/
+/*
             migrationBuilder.DropIndex(
                 name: "IX_AspNetUsers_TeamId",
                 table: "AspNetUsers");
 
             migrationBuilder.DropColumn(
                 name: "TeamId",
-                table: "AspNetUsers");
+                table: "AspNetUsers");*/
         }
 
         /// <inheritdoc />

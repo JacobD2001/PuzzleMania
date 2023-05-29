@@ -10,12 +10,12 @@ namespace PuzzleMania.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
+     /*       migrationBuilder.AddColumn<int>(
                 name: "TotalPoints",
                 table: "Teams",
                 type: "int",
                 nullable: true,
-                defaultValue: 0);
+                defaultValue: 0);*/
         }
 
         /// <inheritdoc />

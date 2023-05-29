@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PuzzleMania.Areas.Identity.Data;
 using PuzzleMania.Data;
+using PuzzleMania.Helpers;
 using PuzzleMania.Interfaces;
 using PuzzleMania.Repositories;
+using PuzzleMania.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("PuzzleManiaContextConnection") ?? throw new InvalidOperationException("Connection string 'PuzzleManiaContextConnection' not found.");
@@ -16,9 +18,14 @@ builder.Services.AddDefaultIdentity<PuzzleManiaUser>(options => options.SignIn.R
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
 
 //add services for DI
 builder.Services.AddScoped<ITeamRepository, TeamRepository>();
+builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
+builder.Services.AddScoped<IPhotoService, PhotoService>();
+
 
 var app = builder.Build();
 

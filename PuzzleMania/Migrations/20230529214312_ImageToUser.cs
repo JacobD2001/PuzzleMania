@@ -5,24 +5,24 @@
 namespace PuzzleMania.Migrations
 {
     /// <inheritdoc />
-    public partial class addforeignkey : Migration
+    public partial class ImageToUser : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-           /* migrationBuilder.AddForeignKey(
-            name: "FK_AspNetUsers_Teams_TeamId",
-            table: "AspNetUsers",
-            column: "TeamId",
-            principalTable: "Teams",
-            principalColumn: "TeamId",
-            onDelete: ReferentialAction.Restrict);*/
+            migrationBuilder.AddColumn<string>(
+                name: "Image",
+                table: "AspNetUsers",
+                type: "nvarchar(max)",
+                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-
+            migrationBuilder.DropColumn(
+                name: "Image",
+                table: "AspNetUsers");
         }
     }
 }

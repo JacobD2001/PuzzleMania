@@ -10,36 +10,36 @@ namespace PuzzleMania.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
+        /*    migrationBuilder.DropForeignKey(
                 name: "FK_AspNetUsers_Team_TeamId",
-                table: "AspNetUsers");
+                table: "AspNetUsers");*/
 
-            migrationBuilder.DropPrimaryKey(
+           /* migrationBuilder.DropPrimaryKey(
                 name: "PK_Team",
                 table: "Team");
 
             migrationBuilder.RenameTable(
                 name: "Team",
-                newName: "Teams");
-
+                newName: "Teams");*/
+/*
             migrationBuilder.AddColumn<string>(
                 name: "UserId",
                 table: "Teams",
                 type: "nvarchar(max)",
                 nullable: false,
-                defaultValue: "");
-
+                defaultValue: "");*/
+/*
             migrationBuilder.AddPrimaryKey(
                 name: "PK_Teams",
                 table: "Teams",
-                column: "TeamId");
+                column: "TeamId");*/
 
-            migrationBuilder.AddForeignKey(
+           /* migrationBuilder.AddForeignKey(
                 name: "FK_AspNetUsers_Teams_TeamId",
                 table: "AspNetUsers",
                 column: "TeamId",
                 principalTable: "Teams",
-                principalColumn: "TeamId");
+                principalColumn: "TeamId");*/
         }
 
         /// <inheritdoc />
