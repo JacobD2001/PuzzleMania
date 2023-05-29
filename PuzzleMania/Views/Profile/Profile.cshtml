@@ -2,18 +2,32 @@
 
 @model ProfileViewModel
 
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
 <h1>Profile</h1>
 
-<p>Email: @Model.Email</p>
-
-@*<h3>Profile Picture</h3>
-<img src="@Model.ProfilePictureUrl" alt="Profile Picture" width="400" height="400" />
-
-<h3>Change Profile Picture</h3>
 <form method="post" enctype="multipart/form-data">
+    <input type="hidden" id="Email" name="Email" asp-for="Email"/>
+    <input type="hidden" id="ProfilePicture" name="ProfilePicture" asp-for="ProfilePicture" />
+
     <div class="form-group">
-        <label for="profilePicture">Upload New Profile Picture:</label>
-        <input type="file" class="form-control-file" id="profilePicture" name="profilePicture">
+        <label for="Email">Email</label>
+        <input asp-for="Email" class="form-control" readonly />
+        <span asp-validation-for="Email" class="text-danger"></span>
     </div>
+
+    <h3>Profile Picture</h3>
+    <div class="form-group">
+        <label for="ProfilePicture">Profile Picture</label>
+        <input type="file" id="ProfilePicture" name="ProfilePicture" class="form-control-file" />
+        <span asp-validation-for="ProfilePicture" class="text-danger"></span>
+    </div>
+    <h3>Profile Picture</h3>
+    <img src="@Model.URL" alt="Profile Picture" width="400" height="400" />
+
+
     <button type="submit" class="btn btn-primary">Save</button>
-</form>*@
+</form>

@@ -6,7 +6,7 @@ using PuzzleMania.Models;
 using PuzzleMania.Areas.Identity.Data;
 using System.Security.Claims;
 using PuzzleMania.Interfaces;
-
+//Currently not in use unnecessary code TOREMOVE
 namespace PuzzleMania.Repositories
 {
     public class ProfileRepository : IProfileRepository
