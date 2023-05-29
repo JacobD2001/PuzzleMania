@@ -1,5 +1,10 @@
 ﻿@using PuzzleMania.ViewModels
 
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
 <h1>TEAMS STATS PAGE</h1>
 @model TeamStatsViewModel
 
