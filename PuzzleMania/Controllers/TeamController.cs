@@ -6,6 +6,9 @@ using PuzzleMania.Interfaces;
 using PuzzleMania.Models;
 using PuzzleMania.Repositories;
 using PuzzleMania.ViewModels;
+using QRCoder;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace PuzzleMania.Controllers
 {
@@ -72,7 +75,28 @@ namespace PuzzleMania.Controllers
             return View(chooseTeam);
         }
 
-      
+        [HttpGet]
+        public IActionResult QRCode(string teamName)
+        {
+            // Generate the joining URL based on the teamName parameter
+            string joiningUrl = Url.Action("JoinTeam", "Team", new { teamName = teamName }, Request.Scheme);
+
+            // Generate the QR code image
+            using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+            {
+                QRCodeData qrCodeData = qrGenerator.CreateQrCode(joiningUrl, QRCodeGenerator.ECCLevel.Q);
+                PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
+
+                // Convert the QR code image to a byte array
+                byte[] qrCodeBytes = qrCode.GetGraphic(20);
+                // Return the QR code image as a file result
+                return File(qrCodeBytes, "image/png");
+                
+            }
+        }
+
+
+
 
         [HttpGet]
         public async Task<IActionResult> TeamStats(int teamId)
@@ -82,6 +106,26 @@ namespace PuzzleMania.Controllers
                 TempData["ErrorMessage"] = $"You must be logged in to access this page.";
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
+
+     /*       //QR code generation
+            // Construct the joining URL based on the teamName parameter
+            string joiningUrl = Url.Action("JoinTeam", "Team", new { teamId = teamId }, Request.Scheme);
+
+            // Generate the QR code
+            using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+            {
+                QRCodeData qrCodeData = qrGenerator.CreateQrCode(joiningUrl, QRCodeGenerator.ECCLevel.Q);
+                PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
+
+                // Convert the QR code into a byte array
+                byte[] qrCodeBytes = qrCode.GetGraphic(20);
+
+                // Pass the QR code byte array to the view
+                ViewBag.QRCodeBytes = qrCodeBytes;
+            }*/
+
+
+
 
             var curTeam = await _teamRepository.GetByIdAsync(teamId);
            //if (curTeam == null) return View("Error");

@@ -20,3 +20,7 @@
 </ul>
 
 <p>Total Points from Last Finished Game: @Model.TotalPoints</p>
+
+<h3>QR Code:</h3>
+<img src="@Url.Action("QRCode", "Team", new { teamName = Model.TeamName })" alt="QR Code" />
+
