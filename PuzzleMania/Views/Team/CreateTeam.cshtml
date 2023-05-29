@@ -1,5 +1,10 @@
 ﻿@model PuzzleMania.Models.Team
 
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
 <h2>Create Team</h2>
 
 <form method="post" action="/Team/CreateTeam">

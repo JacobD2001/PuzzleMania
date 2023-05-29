@@ -29,12 +29,19 @@ namespace PuzzleMania.Controllers
         [HttpGet]
         public async Task<IActionResult> JoinTeam()
         {
+            // Redirect to the login page if the user is not authenticated
+            if (!User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = $"You must be logged in to access this page.";
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
             var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
             // Check if the user has already joined a team
             if (await _teamRepository.CheckIfUserHasTeam(currentUserId)) 
             {
-                TempData["Message"] = "You have already joined a team.";
+                TempData["Message"] = "You have already an assaigned team.";
                 return RedirectToAction("TeamStats");
             }
 
@@ -55,6 +62,12 @@ namespace PuzzleMania.Controllers
         [HttpGet]
         public async Task<IActionResult> ChooseTeam()
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = $"You must be logged in to access this page.";
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
             var chooseTeam = await _teamRepository.GetAll();
             return View(chooseTeam);
         }
@@ -64,7 +77,12 @@ namespace PuzzleMania.Controllers
         [HttpGet]
         public async Task<IActionResult> TeamStats(int teamId)
         {
-            //TODO - why there is a null value
+            if (!User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = $"You must be logged in to access this page.";
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
             var curTeam = await _teamRepository.GetByIdAsync(teamId);
            //if (curTeam == null) return View("Error");
 
@@ -102,25 +120,6 @@ namespace PuzzleMania.Controllers
         {
             var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
-
-            // Logic to handle the form submission for creating a new team
-            /*if (!string.IsNullOrEmpty(teamName))
-            {
-                // Create the new team with the provided name and assaigning user to a team
-                var newTeam = new Team
-                {
-                    TeamName = teamName,
-                    UserId = currentUserId,
-                    TeamSize = 1
-
-                };
-                
-
-                _teamRepository.Add(newTeam);
-                TempData["Message"] = "Team created successfully!";
-                return RedirectToAction("TeamStats");
-            }*/
-           
                 if (currentUserId != null)
                 {
                     var teamToJoin = await _teamRepository.GetTeamByName(teamName);  // Retrieve the team the user wants to join based on their selection
@@ -151,8 +150,32 @@ namespace PuzzleMania.Controllers
         [HttpGet]
         public async Task<IActionResult> CreateTeam()
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = $"You must be logged in to access this page.";
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
+
+            var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
+
+            // Check if the user has already created a team
+            if (await _teamRepository.CheckIfUserHasTeam(currentUserId))
+            {
+                TempData["Message"] = "You have already an assaigned team.";
+                return RedirectToAction("TeamStats");
+            }
+
+            var incompleteTeams = await _teamRepository.GetIncompleteTeams();
+
+            if (incompleteTeams.Count() > 0) //checks if there are any incomplete teams, if there are incomplete teams than user has to choose a team
+            {
+                TempData["Message"] = "There are incomplete teams available. Join one of them instead.";
+                return RedirectToAction("JoinTeam");
+            }
+    
             return View();
         }
+
 
 
         [HttpPost]

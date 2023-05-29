@@ -1,11 +1,12 @@
-﻿@*@if (TempData["Message"] != null)
+﻿@model IEnumerable<Team>
+
+@if (TempData["Message"] != null)
 {
     <div class="alert alert-success">@TempData["Message"]</div>
 }
 
-@model IEnumerable<Team>
 
-<h2>Choose your team wisely</h2>
+<h1>Teams to join</h1>
 
 @if (Model.Any())
 {
@@ -13,7 +14,10 @@
         @foreach (var team in Model)
         {
             <li>
-                <a href="@Url.Action("JoinTeam", "Team", new { teamName = team.TeamName })">@team.TeamName</a>
+                <form method="post" action="@Url.Action("JoinTeam", "Team")">
+                    <input type="hidden" name="teamName" value="@team.TeamName" />
+                    <button type="submit">@team.TeamName</button>
+                </form>
             </li>
         }
     </ul>
@@ -22,30 +26,5 @@ else
 {
     <p>No teams available.</p>
 }
-*@
-@model IEnumerable<Team>
 
-@if (TempData["Message"] != null)
-{
-    <div class="alert alert-success">@TempData["Message"]</div>
-}
 
-<h1>Only Teams to join</h1>
-@if (Model.Any())
-{
-        <ul>
-        @foreach (var team in Model)
-        {
-                    <li>
-                        <form method="post" action="@Url.Action("JoinTeam", "Team")">
-                            <input type="hidden" name="teamName" value="@team.TeamName" />
-                            <button type="submit">@team.TeamName</button>
-                        </form>
-                    </li>
-        }
-        </ul>
-}
-else
-{
-        <p>No teams available.</p>
-}

@@ -1,7 +1,11 @@
 ﻿@model IEnumerable<Team>
 
-<h2>Choose a Team</h2>
-<h1>JOIN TEAM PAGE</h1>
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+<h1>Choose a Team</h1>
+
 @if (Model.Any())
 {
     <p>Select a team to join:</p>
