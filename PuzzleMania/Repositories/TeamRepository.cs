@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PuzzleMania.Areas.Identity.Data;
 using PuzzleMania.Data;
+using PuzzleMania.Helpers;
 using PuzzleMania.Interfaces;
 using PuzzleMania.Models;
 using System.Drawing.Drawing2D;
@@ -11,10 +12,12 @@ namespace PuzzleMania.Repositories
     public class TeamRepository : ITeamRepository
     {
         private readonly PuzzleManiaContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public TeamRepository(PuzzleManiaContext context)
+        public TeamRepository(PuzzleManiaContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         //returns true if user has already joined a team
@@ -114,18 +117,24 @@ namespace PuzzleMania.Repositories
 
 
         // Find the user based on the current logged in user
-     /*   public async Task<User> GetUserById(string currentUserId)
-        {
-            return await _context.Users.SingleOrDefaultAsync(u => u.Id == currentUserId);
-        }
-*/
-
-
-           public async Task<Team> GetByIdAsync(int teamId)
+        /*   public async Task<User> GetUserById(string currentUserId)
            {
-               return await _context.Teams
-                   .AsNoTracking().FirstOrDefaultAsync(t => t.TeamId == teamId);
+               return await _context.Users.SingleOrDefaultAsync(u => u.Id == currentUserId);
            }
+   */
+
+
+        public async Task<Team> GetByIdAsync(int teamId)
+        {
+            var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
+
+            return await _context.Teams
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.UserId == currentUserId && t.TeamId == teamId);
+        }
+
+
+
 
 
     }

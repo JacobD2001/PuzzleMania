@@ -22,5 +22,16 @@
 <p>Total Points from Last Finished Game: @Model.TotalPoints</p>
 
 <h3>QR Code:</h3>
-<img src="@Url.Action("QRCode", "Team", new { teamName = Model.TeamName })" alt="QR Code" />
+
+@if(Model.TeamSize < 2)
+{
+    <img src="@Url.Action("QRCode", "Team", new { teamName = Model.TeamName })" alt="QR Code" />
+    <a href="@Url.Action("QRCode", "Team", new { teamName = Model.TeamName })">Download QR Code</a>
+}
+else
+{
+    <p>QR Code generation is only available for incomplete teams.</p>
+}
+
+
 

@@ -16,7 +16,7 @@
             <select name="teamName" id="teamName" class="form-control">
                 @foreach (var team in Model)
                 {
-                    <option value="@team.TeamName">@team.TeamName</option>
+                    <a href="@Url.Action("TeamStats", "Team", new { teamId = team.TeamId })">@team.TeamName</a>
                 }
             </select>
         </div>

@@ -42,7 +42,7 @@ namespace PuzzleMania.Controllers
             var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
             // Check if the user has already joined a team
-            if (await _teamRepository.CheckIfUserHasTeam(currentUserId)) 
+            if (await _teamRepository.CheckIfUserHasTeam(currentUserId))
             {
                 TempData["Message"] = "You have already an assaigned team.";
                 return RedirectToAction("TeamStats");
@@ -76,93 +76,84 @@ namespace PuzzleMania.Controllers
         }
 
         [HttpGet]
-        public IActionResult QRCode(string teamName)
+        public async Task<IActionResult> QRCode(string teamName)
         {
-            // Generate the joining URL based on the teamName parameter
-            string joiningUrl = Url.Action("JoinTeam", "Team", new { teamName = teamName }, Request.Scheme);
+            var teamToJoin = await _teamRepository.GetTeamByName(teamName);  // Retrieve the team the user wants to join based on their selection
 
-            // Generate the QR code image
-            using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+            if (teamToJoin != null && teamToJoin.TeamSize < 2)
             {
-                QRCodeData qrCodeData = qrGenerator.CreateQrCode(joiningUrl, QRCodeGenerator.ECCLevel.Q);
-                PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
+                // Generate the joining URL based on the teamName parameter
+                string joiningUrl = Url.Action("TeamStats", "Team", new { teamName = teamName }, Request.Scheme);
 
-                // Convert the QR code image to a byte array
-                byte[] qrCodeBytes = qrCode.GetGraphic(20);
-                // Return the QR code image as a file result
-                return File(qrCodeBytes, "image/png");
-                
+                // Generate the QR code image
+                using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+                {
+                    QRCodeData qrCodeData = qrGenerator.CreateQrCode(joiningUrl, QRCodeGenerator.ECCLevel.Q);
+                    PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
+
+                    // Convert the QR code image to a byte array
+                    byte[] qrCodeBytes = qrCode.GetGraphic(20);
+                    // Return the QR code image as a file result
+                    return File(qrCodeBytes, "image/png");
+
+                }
             }
+
+            return RedirectToAction("TeamStats");
+
         }
 
 
 
 
+
+        //TODO - Do team statsow musi byc przekazane teamId
         [HttpGet]
-        public async Task<IActionResult> TeamStats(int teamId)
-        {
-            if (!User.Identity.IsAuthenticated)
+            public async Task<IActionResult> TeamStats(int teamId) //tutaj teamId = 0 tutaj error
             {
-                TempData["ErrorMessage"] = $"You must be logged in to access this page.";
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+                if (!User.Identity.IsAuthenticated)
+                {
+                    TempData["ErrorMessage"] = $"You must be logged in to access this page.";
+                    return RedirectToPage("/Account/Login", new { area = "Identity" });
+                }
+
+                var curTeam = await _teamRepository.GetByIdAsync(teamId);
+                // if (curTeam == null) return View("Error");
+
+                var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
+
+                // Check if the user has already joined a team
+                if (!await _teamRepository.CheckIfUserHasTeam(currentUserId))
+                {
+                    TempData["Message"] = "You have not joined a team yet.";
+                    return RedirectToAction("JoinTeam");
+                }
+
+                // Retrieve the team the user has joined
+                var team = await _teamRepository.GetTeamByUserId(currentUserId);
+
+                // Retrieve the list of users in the team
+                var teamMembers = await _teamRepository.GetTeamMembers(team.UserId);
+
+                // Pass the team and team members to the view
+                var teamStatsViewModel = new TeamStatsViewModel
+                {
+                    TeamName = team.TeamName,
+                    TeamSize = team.TeamSize,
+                    TeamMembers = teamMembers,
+                    TotalPoints = team.TotalPoints
+                };
+
+                return View(teamStatsViewModel);
             }
 
-     /*       //QR code generation
-            // Construct the joining URL based on the teamName parameter
-            string joiningUrl = Url.Action("JoinTeam", "Team", new { teamId = teamId }, Request.Scheme);
 
-            // Generate the QR code
-            using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+
+            [HttpPost]
+            public async Task<IActionResult> JoinTeam(string teamName)
             {
-                QRCodeData qrCodeData = qrGenerator.CreateQrCode(joiningUrl, QRCodeGenerator.ECCLevel.Q);
-                PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
-
-                // Convert the QR code into a byte array
-                byte[] qrCodeBytes = qrCode.GetGraphic(20);
-
-                // Pass the QR code byte array to the view
-                ViewBag.QRCodeBytes = qrCodeBytes;
-            }*/
-
-
-
-
-            var curTeam = await _teamRepository.GetByIdAsync(teamId);
-           //if (curTeam == null) return View("Error");
-
-            var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
-
-            // Check if the user has already joined a team
-            if (!await _teamRepository.CheckIfUserHasTeam(currentUserId))
-            {
-                TempData["Message"] = "You have not joined a team yet.";
-                return RedirectToAction("JoinTeam");
-            }
-
-            // Retrieve the team the user has joined
-            var team = await _teamRepository.GetTeamByUserId(currentUserId);
-
-            // Retrieve the list of users in the team
-            var teamMembers = await _teamRepository.GetTeamMembers(team.UserId);
-
-            // Pass the team and team members to the view
-            var teamStatsViewModel = new TeamStatsViewModel
-            {
-                TeamName= team.TeamName,
-                TeamSize= team.TeamSize,
-                TeamMembers = teamMembers,
-                TotalPoints = team.TotalPoints
-            };
-
-            return View(teamStatsViewModel);
-        }
-
-
-
-        [HttpPost]
-        public async Task<IActionResult> JoinTeam(string teamName)
-        {
-            var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
+                var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
                 if (currentUserId != null)
                 {
@@ -186,47 +177,47 @@ namespace PuzzleMania.Controllers
                 }
 
                 return View();
-            
 
 
-        }
 
-        [HttpGet]
-        public async Task<IActionResult> CreateTeam()
-        {
-            if (!User.Identity.IsAuthenticated)
-            {
-                TempData["ErrorMessage"] = $"You must be logged in to access this page.";
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
 
-            var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
-
-            // Check if the user has already created a team
-            if (await _teamRepository.CheckIfUserHasTeam(currentUserId))
+            [HttpGet]
+            public async Task<IActionResult> CreateTeam()
             {
-                TempData["Message"] = "You have already an assaigned team.";
-                return RedirectToAction("TeamStats");
+                if (!User.Identity.IsAuthenticated)
+                {
+                    TempData["ErrorMessage"] = $"You must be logged in to access this page.";
+                    return RedirectToPage("/Account/Login", new { area = "Identity" });
+                }
+
+                var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
+
+                // Check if the user has already created a team
+                if (await _teamRepository.CheckIfUserHasTeam(currentUserId))
+                {
+                    TempData["Message"] = "You have already an assaigned team.";
+                    return RedirectToAction("TeamStats");
+                }
+
+                var incompleteTeams = await _teamRepository.GetIncompleteTeams();
+
+                if (incompleteTeams.Count() > 0) //checks if there are any incomplete teams, if there are incomplete teams than user has to choose a team
+                {
+                    TempData["Message"] = "There are incomplete teams available. Join one of them instead.";
+                    return RedirectToAction("JoinTeam");
+                }
+
+                return View();
             }
 
-            var incompleteTeams = await _teamRepository.GetIncompleteTeams();
 
-            if (incompleteTeams.Count() > 0) //checks if there are any incomplete teams, if there are incomplete teams than user has to choose a team
+
+            [HttpPost]
+            public async Task<IActionResult> CreateTeam(string teamName)
             {
-                TempData["Message"] = "There are incomplete teams available. Join one of them instead.";
-                return RedirectToAction("JoinTeam");
-            }
-    
-            return View();
-        }
+                var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
-
-
-        [HttpPost]
-        public async Task<IActionResult> CreateTeam(string teamName)
-        {
-            var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
-              
                 // Create the new team with the provided name and assaigning user to a team
                 var newTeam = new Team
                 {
@@ -238,7 +229,7 @@ namespace PuzzleMania.Controllers
                 _teamRepository.Add(newTeam);
                 TempData["Message"] = "Team created successfully!";
                 return RedirectToAction("TeamStats");
-            
+
+            }
         }
     }
-}
