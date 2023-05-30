@@ -1,0 +1,22 @@
+﻿@using PuzzleMania.ViewModels
+
+@model StartGameViewModel
+
+<h1>Welcome to the PuzzleMania game</h1>
+
+<div>
+    <h2>Team name: @Model.TeamName</h2>
+    <p>Instructions</p>
+    <ul>
+        <li>When you click on start button the game will start</li>
+        <li>You will have 3 riddles for geeks to solve</li>
+        <li>After the game you will be shown how many points you manage to obtain</li>
+        <li>You have 10 points, wrong answer = - 10 points, the right one = +10 points</li>
+        <li>The game will end when all riddles have been solved or if you use up all points. If the player ends the game with more than 0 points, those points will be added to the team points.</li>
+        <li>Engage in friendly competition and have fun!</li>
+    </ul>
+</div>
+
+<form method="post" asp-action="StartGame">
+    <button type="submit">Start</button>
+</form>
