@@ -42,7 +42,7 @@ namespace PuzzleMania.Repositories
             return await _context.Riddles.ToListAsync();
         }
 
-        public async Task<Riddle> GetByIdAsync(int id)
+        public async Task<Riddle> GetByIdAsync(int gameId, int id)
         {
             return await _context.Riddles
                 .FirstOrDefaultAsync(r => r.RiddleId == id);

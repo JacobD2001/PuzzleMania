@@ -2,6 +2,7 @@
 using PuzzleMania.Helpers;
 using PuzzleMania.Interfaces;
 using PuzzleMania.Models;
+using PuzzleMania.Repositories;
 using PuzzleMania.ViewModels;
 
 namespace PuzzleMania.Controllers
@@ -11,12 +12,14 @@ namespace PuzzleMania.Controllers
         private readonly IGameRepository _gameRepository;
         private readonly ITeamRepository _teamRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IRiddleRepository _riddleRepository;
 
-        public GameController(IGameRepository gameRepository, ITeamRepository teamRepository, IHttpContextAccessor httpContextAccessor)
+        public GameController(IGameRepository gameRepository, ITeamRepository teamRepository, IHttpContextAccessor httpContextAccessor, IRiddleRepository riddleRepository)
         {
             _gameRepository = gameRepository;
             _teamRepository = teamRepository;
             _httpContextAccessor = httpContextAccessor;
+            _riddleRepository = riddleRepository;
         }
 
         public IActionResult Index()
@@ -65,8 +68,50 @@ namespace PuzzleMania.Controllers
             return View(startGameViewModel);
         }
 
+        //TEST VVV
+        [HttpPost]
+        public async Task<IActionResult> StartGame(int teamId)
+        {
+            // Get the current team ID
+            var curTeamId = await _teamRepository.GetByIdAsync(teamId);
+
+            // Add a new game and get the generated gameId
+            int gameId = _gameRepository.AddGame(teamId).GameId;
+
+            // Redirect the user to the first riddle of the game
+            return RedirectToAction("Riddle", new { gameId = gameId, riddleId = 1 });
+        }
+
+        [HttpGet("/game/{gameId}/riddle/{riddleId}")]
+        public IActionResult Riddle(int gameId, int riddleId)
+        {
+            // Get the riddle information based on the gameId and riddleId
+            var riddle = _riddleRepository.GetByIdAsync(gameId, riddleId);
+
+            if (riddle == null)
+            {
+                // Handle the case when the riddle doesn't exist
+                return NotFound();
+            }
+
+            // Pass the riddle data to the view
+            return View(riddle);
+        }
+
+
+
+
+
+
+
 
 
 
     }
+
+
+
+
+
+
 }

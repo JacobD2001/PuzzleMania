@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PuzzleMania.Data;
 
@@ -11,9 +12,11 @@ using PuzzleMania.Data;
 namespace PuzzleMania.Migrations
 {
     [DbContext(typeof(PuzzleManiaContext))]
-    partial class PuzzleManiaContextModelSnapshot : ModelSnapshot
+    [Migration("20230530211135_11init")]
+    partial class _11init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

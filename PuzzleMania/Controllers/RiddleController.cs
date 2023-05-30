@@ -36,9 +36,9 @@ namespace PuzzleMania.Controllers
         //getbyid
         //works
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int gameId, int id)
         {
-            Riddle riddle = await _riddleRepository.GetByIdAsync(id);
+            Riddle riddle = await _riddleRepository.GetByIdAsync(gameId, id);
             if (riddle == null)
                 return NotFound();
 
@@ -65,9 +65,9 @@ namespace PuzzleMania.Controllers
         //Delete
         //works
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int gameId, int id)
         {
-            var result = await _riddleRepository.GetByIdAsync(id);
+            var result = await _riddleRepository.GetByIdAsync(gameId, id);
 
             if(result == null)
                 return NotFound();

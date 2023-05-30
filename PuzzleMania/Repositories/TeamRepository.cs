@@ -126,11 +126,9 @@ namespace PuzzleMania.Repositories
 
         public async Task<Team> GetByIdAsync(int teamId)
         {
-            var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
-
             return await _context.Teams
                 .AsNoTracking()
-                .FirstOrDefaultAsync(t => t.UserId == currentUserId && t.TeamId == teamId);
+                .FirstOrDefaultAsync(t => t.TeamId == teamId);
         }
 
 

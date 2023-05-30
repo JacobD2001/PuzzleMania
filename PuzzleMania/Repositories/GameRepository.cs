@@ -1,5 +1,6 @@
 ﻿using PuzzleMania.Data;
 using PuzzleMania.Interfaces;
+using PuzzleMania.Models;
 
 namespace PuzzleMania.Repositories
 {
@@ -18,5 +19,14 @@ namespace PuzzleMania.Repositories
             var team = _context.Teams.FirstOrDefault(t => t.UserId == userId);
             return team.TeamSize < 2;
         }
+
+        public Game AddGame(int teamId)
+        {
+            Game game = new Game { TeamId = teamId };
+            _context.Games.Add(game);
+            _context.SaveChanges();
+            return game;
+        }
+
     }
 }

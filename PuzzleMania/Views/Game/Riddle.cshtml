@@ -1,0 +1,13 @@
+﻿@model PuzzleMania.Models.Riddle
+
+
+<h1>Riddle</h1>
+
+<p>@Model.Question</p>
+
+<form method="post" action="/game/@Model.GameId/riddle/@Model.RiddleId">
+    <label for="answer">Enter your answer:</label>
+    <input type="text" id="answer" name="answer" required>
+
+    <button type="submit">Submit</button>
+</form>

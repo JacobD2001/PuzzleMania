@@ -35,19 +35,19 @@ namespace PuzzleMania.Migrations
                 {
                     RiddleId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                   // GameId = table.Column<int>(type: "int", nullable: false),
+                    GameId = table.Column<int>(type: "int", nullable: false),
                     Question = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Answer = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Riddles", x => x.RiddleId);
-                   /* table.ForeignKey(
+                    table.ForeignKey(
                         name: "FK_Riddles_Games_GameId",
                         column: x => x.GameId,
                         principalTable: "Games",
                         principalColumn: "GameId",
-                        onDelete: ReferentialAction.Cascade);*/
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -55,10 +55,10 @@ namespace PuzzleMania.Migrations
                 table: "Games",
                 column: "TeamId");
 
-    /*        migrationBuilder.CreateIndex(
+            migrationBuilder.CreateIndex(
                 name: "IX_Riddles_GameId",
                 table: "Riddles",
-                column: "GameId");*/
+                column: "GameId");
         }
 
         /// <inheritdoc />
