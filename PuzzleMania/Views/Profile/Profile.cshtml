@@ -8,7 +8,6 @@
 }
 
 <h1>Profile</h1>
-
 <form method="post" enctype="multipart/form-data">
     <input type="hidden" id="Email" name="Email" asp-for="Email"/>
     <input type="hidden" id="ProfilePicture" name="ProfilePicture" asp-for="ProfilePicture" />
@@ -20,14 +19,13 @@
     </div>
 
     <h3>Profile Picture</h3>
+    <img src="@Model.URL" alt="Profile Picture" width="400" height="400" />
+
     <div class="form-group">
         <label for="ProfilePicture">Profile Picture</label>
         <input type="file" id="ProfilePicture" name="ProfilePicture" class="form-control-file" />
         <span asp-validation-for="ProfilePicture" class="text-danger"></span>
     </div>
-    <h3>Profile Picture</h3>
-    <img src="@Model.URL" alt="Profile Picture" width="400" height="400" />
-
 
     <button type="submit" class="btn btn-primary">Save</button>
 </form>

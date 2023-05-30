@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PuzzleMania.Areas.Identity.Data;
 using PuzzleMania.Models;
 using System.Drawing.Drawing2D;
+using System.Reflection.Emit;
 
 namespace PuzzleMania.Data;
 
@@ -15,12 +16,21 @@ public class PuzzleManiaContext : IdentityDbContext<PuzzleManiaUser>
     }
 
     public virtual DbSet<Team> Teams { get; set; }
+    public virtual DbSet<Game> Games { get; set; }
+    public virtual DbSet<Riddle> Riddles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        // Customize the ASP.NET Identity model and override the defaults if needed.
-        // For example, you can rename the ASP.NET Identity table names and more.
-        // Add your customizations after calling base.OnModelCreating(builder);
+
+        builder.Entity<Game>()
+                 .HasOne(g => g.Team)
+                 .WithMany()
+                 .HasForeignKey(g => g.TeamId);
+
+        builder.Entity<Riddle>()
+            .HasOne(r => r.Game)
+                    .WithMany()
+                    .HasForeignKey(r => r.GameId);
     }
 }
