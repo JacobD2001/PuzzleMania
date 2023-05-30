@@ -28,9 +28,9 @@ public class PuzzleManiaContext : IdentityDbContext<PuzzleManiaUser>
                  .WithMany()
                  .HasForeignKey(g => g.TeamId);
 
-        builder.Entity<Riddle>()
+       /* builder.Entity<Riddle>()
             .HasOne(r => r.Game)
                     .WithMany()
-                    .HasForeignKey(r => r.GameId);
+                    .HasForeignKey(r => r.GameId);*/
     }
 }

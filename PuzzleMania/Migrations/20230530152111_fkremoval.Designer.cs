@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PuzzleMania.Data;
 
@@ -11,9 +12,11 @@ using PuzzleMania.Data;
 namespace PuzzleMania.Migrations
 {
     [DbContext(typeof(PuzzleManiaContext))]
-    partial class PuzzleManiaContextModelSnapshot : ModelSnapshot
+    [Migration("20230530152111_fkremoval")]
+    partial class fkremoval
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -257,11 +260,16 @@ namespace PuzzleMania.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Question")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("RiddleId");
+
+                    b.HasIndex("GameId");
 
                     b.ToTable("Riddles");
                 });
@@ -353,6 +361,17 @@ namespace PuzzleMania.Migrations
                         .IsRequired();
 
                     b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("PuzzleMania.Models.Riddle", b =>
+                {
+                    b.HasOne("PuzzleMania.Models.Game", "Game")
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Game");
                 });
 #pragma warning restore 612, 618
         }
