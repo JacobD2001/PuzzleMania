@@ -1,4 +1,5 @@
-﻿using PuzzleMania.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using PuzzleMania.Data;
 using PuzzleMania.Interfaces;
 using PuzzleMania.Models;
 
@@ -27,6 +28,13 @@ namespace PuzzleMania.Repositories
             _context.SaveChanges();
             return game;
         }
+
+        public async Task<Game> GetGameByIdAsync(int gameId)
+        {
+            return await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId);
+        }
+
+      
 
     }
 }

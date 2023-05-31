@@ -16,6 +16,7 @@ namespace PuzzleMania.Controllers
         }
 
         //getall
+        //https://localhost:7013/api/Riddle
         //works
         [HttpGet]
         public async Task<IActionResult> Get()
@@ -34,6 +35,7 @@ namespace PuzzleMania.Controllers
 
 
         //getbyid
+        //https://localhost:7013/api/Riddle/1
         //works
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int gameId, int id)
@@ -46,6 +48,7 @@ namespace PuzzleMania.Controllers
         }
 
         //Create/edit
+        //https://localhost:7013/api/Riddle + body
         //works
         [HttpPost]
         public async Task<IActionResult> CreateEdit(Riddle riddle)
@@ -63,6 +66,7 @@ namespace PuzzleMania.Controllers
         }
 
         //Delete
+        //https://localhost:7013/api/Riddle/1
         //works
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int gameId, int id)

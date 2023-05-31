@@ -6,5 +6,7 @@ namespace PuzzleMania.Interfaces
     {
         bool IsTeamIncomplete(string userId);
         Game AddGame(int teamId);
+        Task<Game> GetGameByIdAsync(int gameId);
+
     }
 }

@@ -42,10 +42,41 @@ namespace PuzzleMania.Repositories
             return await _context.Riddles.ToListAsync();
         }
 
-        public async Task<Riddle> GetByIdAsync(int gameId, int id)
+        public async Task<Riddle> GetByIdAsync(int gameId, int riddleId)
         {
             return await _context.Riddles
-                .FirstOrDefaultAsync(r => r.RiddleId == id);
+                .FirstOrDefaultAsync(r => r.GameId == gameId && r.RiddleId == riddleId);
         }
+
+        public async Task<int?> GetRiddleIdByGameId(int gameId)
+        {
+            var riddle = await _context.Riddles.FirstOrDefaultAsync(r => r.GameId == gameId);
+            return riddle?.RiddleId;
+        }
+
+        public async Task<List<int>> GetAvailableRiddleIds()
+        {
+            return await _context.Riddles.Select(r => r.RiddleId).ToListAsync();
+        }
+
+        public async Task AssignRiddleId(int gameId, int riddleId)
+        {
+            var riddle = await _context.Riddles.FindAsync(riddleId);
+
+            if (riddle != null)
+            {
+                riddle.GameId = gameId;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<bool> IsNewGame(int gameId)
+        {
+            // Check if any riddle is associated with the given gameId
+            return await _context.Riddles.AnyAsync(r => r.GameId == gameId);
+        }
+
+
+
     }
 }

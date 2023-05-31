@@ -68,35 +68,85 @@ namespace PuzzleMania.Controllers
             return View(startGameViewModel);
         }
 
-        //TEST VVV
+        //TEST VVV TODO - Tu skończyłem
         [HttpPost]
-        public async Task<IActionResult> StartGame(int teamId)
+        public async Task<IActionResult> StartGamePost()
         {
             // Get the current team ID
-            var curTeamId = await _teamRepository.GetByIdAsync(teamId);
+            //var curTeamId = await _teamRepository.GetByIdAsync(teamId);
 
+            //1.Retrive current user
+            var currentUserId = _httpContextAccessor.HttpContext.User.GetUserId();
+            //2.Retrive the teamId of current user
+            var curTeamId = await _teamRepository.GetTeamByUserId(currentUserId);
+            //3. Assaign teamid to variable
+            int teamId = curTeamId.TeamId;
             // Add a new game and get the generated gameId
             int gameId = _gameRepository.AddGame(teamId).GameId;
 
-            // Redirect the user to the first riddle of the game
-            return RedirectToAction("Riddle", new { gameId = gameId, riddleId = 1 });
-        }
+            List<int> availableRiddleIds = await _riddleRepository.GetAvailableRiddleIds();
 
-        [HttpGet("/game/{gameId}/riddle/{riddleId}")]
-        public IActionResult Riddle(int gameId, int riddleId)
-        {
-            // Get the riddle information based on the gameId and riddleId
-            var riddle = _riddleRepository.GetByIdAsync(gameId, riddleId);
-
-            if (riddle == null)
+            if (availableRiddleIds.Count == 0)
             {
-                // Handle the case when the riddle doesn't exist
+                // Handle the case when no riddles are available
                 return NotFound();
             }
 
-            // Pass the riddle data to the view
-            return View(riddle);
+            // Select a random riddle ID
+            Random random = new Random();
+            int randomRiddleId = availableRiddleIds[random.Next(availableRiddleIds.Count)];
+
+            // Assign the random riddle ID to the current game
+            await _riddleRepository.AssignRiddleId(gameId, randomRiddleId);
+            // Redirect the user to the first riddle of the game
+            return RedirectToAction("Riddle", new { gameId = gameId, riddleId = randomRiddleId });
         }
+
+        [HttpGet("/game/{gameId}/riddle/{riddleId}")]
+        public async Task<IActionResult> Riddle(int gameId, int riddleId)
+        {
+            // Check if it's a new game (no riddles assigned to the game yet)
+            bool isNewGame = await _riddleRepository.IsNewGame(gameId);
+
+            if (isNewGame)
+            {
+                // Assign the riddle ID to the current game
+                await _riddleRepository.AssignRiddleId(gameId, riddleId);
+
+                // Get the riddle information based on the gameId and riddleId
+                var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
+
+                // Handle the case when the riddle doesn't exist
+                if (riddle == null)
+                    return NotFound();
+
+                // Redirect to the view
+                return View(riddle);
+             
+
+            }
+            return RedirectToAction("StartGame");
+            
+
+         
+        }
+
+
+
+
+        /*     [HttpGet("/game/{gameId}/riddle/{riddleId}")]
+             public async Task<IActionResult> Riddle(int gameId, int riddleId)
+             {
+                 // Get the riddle information based on the gameId and riddleId
+                 var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
+
+                 if (riddle == null)           
+                     return NotFound();
+
+
+                 // Pass the riddle data to the view
+                 return View(riddle);
+             }*/
 
 
 
