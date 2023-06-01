@@ -84,17 +84,17 @@ namespace PuzzleMania.Controllers
             // Add a new game and get the generated gameId
             int gameId = _gameRepository.AddGame(teamId).GameId;
 
-            List<int> availableRiddleIds = await _riddleRepository.GetAvailableRiddleIds();
+            /*List<int> availableRiddleIds = await _riddleRepository.GetAvailableRiddleIds();
 
             if (availableRiddleIds.Count == 0)
-            {
                 // Handle the case when no riddles are available
-                return NotFound();
-            }
+                return NotFound();*/
+
 
             // Select a random riddle ID
-            Random random = new Random();
-            int randomRiddleId = availableRiddleIds[random.Next(availableRiddleIds.Count)];
+            // Random random = new Random();
+            //int randomRiddleId = availableRiddleIds[random.Next(availableRiddleIds.Count)];
+            int randomRiddleId = await GetNextRandomRiddleId();
 
             // Assign the random riddle ID to the current game
             await _riddleRepository.AssignRiddleId(gameId, randomRiddleId);
@@ -105,31 +105,283 @@ namespace PuzzleMania.Controllers
         [HttpGet("/game/{gameId}/riddle/{riddleId}")]
         public async Task<IActionResult> Riddle(int gameId, int riddleId)
         {
-            // Check if it's a new game (no riddles assigned to the game yet)
-            bool isNewGame = await _riddleRepository.IsNewGame(gameId);
+            // Get the riddle information based on the gameId and riddleId
+            var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
 
-            if (isNewGame)
-            {
-                // Assign the riddle ID to the current game
-                await _riddleRepository.AssignRiddleId(gameId, riddleId);
+            // Handle the case when the riddle doesn't exist
+            if (riddle == null)
+                return NotFound();
 
-                // Get the riddle information based on the gameId and riddleId
-                var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
-
-                // Handle the case when the riddle doesn't exist
-                if (riddle == null)
-                    return NotFound();
-
-                // Redirect to the view
-                return View(riddle);
-             
-
-            }
-            return RedirectToAction("StartGame");
-            
-
-         
+            // Pass the riddle data to the view
+            return View("Riddle", riddle);
         }
+
+        [HttpPost("/game/{gameId}/riddle/{riddleId}")]
+        public async Task<IActionResult> SubmitAnswer(int gameId, int riddleId, string answer)
+        {
+            // Get the riddle information based on the gameId and riddleId
+            var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
+
+            // Handle the case when the riddle doesn't exist
+            if (riddle == null)
+                return NotFound();
+
+            // Check if the submitted answer is correct
+            bool isCorrect = CheckAnswer(answer, riddle.Answer);
+            int nextRandomRiddleId = await GetNextRandomRiddleId(); //gameid
+
+
+            if (isCorrect)
+            {
+                // Display a success message
+                ViewBag.Message = "Correct answer!";
+
+                // Increment the count of completed riddles
+                int completedRiddlesCount = Convert.ToInt32(TempData["CompletedRiddlesCount"]) + 1;
+
+                // Check if all riddles have been completed
+                if (completedRiddlesCount >= 3) // Adjust the condition based on the desired number of riddles
+                {
+                    // Redirect to the finish game view
+                    return View("FinishGame");
+                }
+
+                // Proceed to the next random riddle
+
+                // Set the ViewBag properties
+                ViewBag.ShowNextButton = true;
+                ViewBag.NextRiddleId = nextRandomRiddleId;
+
+                // Redirect to the next riddle
+                //TODO - It should return view here as we don't get the incorrect info answer in the view
+                await _riddleRepository.AssignRiddleId(gameId, nextRandomRiddleId);
+                return await Riddle(gameId, nextRandomRiddleId);
+            }
+            else
+            {
+                // Display the correct answer
+                ViewBag.Message = "Incorrect answer. The correct answer is: " + riddle.Answer;
+
+                // Set the ViewBag properties
+                ViewBag.ShowNextButton = true;
+                ViewBag.NextRiddleId = nextRandomRiddleId;
+
+                //ViewBag.NextRiddleId = riddleId; // Stay on the same riddle
+            }
+
+    
+
+            // Pass the riddle data and the submitted answer to the view
+            ViewBag.SubmittedAnswer = answer;
+            // return View("Riddle", riddleModel);
+            //TODO - It should return view here as we don't get the incorrect info answer in the view
+            await _riddleRepository.AssignRiddleId(gameId, nextRandomRiddleId);
+            return await Riddle(gameId, nextRandomRiddleId);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FinishGame()
+        {
+            /*        // Get the current team ID
+                    var teamId = await _teamRepository.GetTeamIdByUserId(_httpContextAccessor.HttpContext.User.GetUserId());
+
+                    // Get the team name
+                    var teamName = await _teamRepository.GetTeamNameById(teamId);
+
+                    // Get the team score
+                    var teamScore = await _gameRepository.GetTeamScore(teamId);
+
+                    // Pass the team name and score to the view
+                    var finishGameViewModel = new FinishGameViewModel
+                    {
+                        TeamName = teamName,
+                        TeamScore = teamScore
+                    };
+        */
+            //return View(finishGameViewModel);
+            return View();
+        }
+
+        //httpget i post w jednym rozdzielic todo
+        /* [HttpGet("/game/{gameId}/riddle/{riddleId}")]
+         public async Task<IActionResult> Riddle(int gameId, int riddleId, string usersAnswer)
+         {
+             // Get the riddle information based on the gameId and riddleId
+             var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
+
+             // Handle the case when the riddle doesn't exist
+             if (riddle == null)
+                 return NotFound();
+
+             // Check if the user has submitted an answer
+             string submittedAnswer = usersAnswer;
+
+             if (!string.IsNullOrEmpty(submittedAnswer))
+             {
+                 // Check if the submitted answer is correct
+                 bool isCorrect = CheckAnswer(submittedAnswer, riddle.Answer);
+
+                 if (isCorrect)
+                 {
+                     // Display a success message
+                     ViewBag.Message = "Correct answer!";
+
+                     // Increment the count of completed riddles
+                     int completedRiddlesCount = Convert.ToInt32(TempData["CompletedRiddlesCount"]) + 1;
+
+                     // Check if all riddles have been completed
+                     if (completedRiddlesCount >= 3) // Adjust the condition based on the desired number of riddles
+                     {
+                         // Redirect to the finish game view
+                         return RedirectToAction("FinishGame");
+                     }
+
+                     // Proceed to the next random riddle
+                     int nextRandomRiddleId = await GetNextRandomRiddleId(); //gameid
+
+                     // Redirect to the next riddle
+                     return RedirectToAction("Riddle", new { gameId = gameId, riddleId = nextRandomRiddleId });
+                 }
+                 else
+                 {
+                     // Display the correct answer
+                     ViewBag.Message = "Incorrect answer. The correct answer is: " + riddle.Answer;
+                 }
+             }
+             else
+             {
+                 // Reset the count of completed riddles when starting a new riddle
+                 TempData["CompletedRiddlesCount"] = 0;
+             }
+
+             // Pass the riddle data and the submitted answer to the view
+             ViewBag.SubmittedAnswer = submittedAnswer;
+             return View(riddle);
+         }*/
+
+
+
+
+        private bool CheckAnswer(string submittedAnswer, string correctAnswer)
+        {
+            // Implement your answer validation logic here
+            // Compare the submitted answer with the correct answer and return true if they match
+            // You can use case-insensitive comparison or apply any specific validation rules you need
+
+            bool isCorrect = string.Equals(submittedAnswer, correctAnswer, StringComparison.OrdinalIgnoreCase);
+            return isCorrect;
+
+        }
+
+        private async Task<int> GetNextRandomRiddleId() //gameid
+        {
+            List<int> availableRiddleIds = await _riddleRepository.GetAvailableRiddleIds(); //gameid
+
+
+            if (availableRiddleIds.Count == 0)
+            {
+                // Handle the case when no riddles are available
+                throw new Exception("No riddles are available.");
+            }
+
+            // Select a random riddle ID
+            Random random = new Random();
+            int randomRiddleId = availableRiddleIds[random.Next(availableRiddleIds.Count)];
+
+            // Assign the random riddle ID to the current game
+
+            return randomRiddleId;
+        }
+
+
+        /* [HttpGet("/game/{gameId}/riddle/{riddleId}")]
+         public async Task<IActionResult> Riddle(int gameId, int riddleId)
+         {
+             // Get the riddle information based on the gameId and riddleId
+             var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
+
+             // Handle the case when the riddle doesn't exist
+             if (riddle == null)
+                 return NotFound();
+
+             // Check if the user has submitted an answer
+             string submittedAnswer = Request.Form["answer"];
+
+             if (!string.IsNullOrEmpty(submittedAnswer))
+             {
+                 // Check if the submitted answer is correct
+                 bool isCorrect = CheckAnswer(submittedAnswer, riddle.Answer);
+
+                 if (isCorrect)
+                 {
+                     // Display a success message
+                     ViewBag.Message = "Correct answer!";
+
+                     // Proceed to the next riddle
+                     List<int> availableRiddleIds = await _riddleRepository.GetAvailableRiddleIds();
+
+                     if (availableRiddleIds.Count == 0)
+                         // Handle the case when no riddles are available
+                         return NotFound();
+
+                     Random random = new Random();
+                     int nextRandomRiddleId = availableRiddleIds[random.Next(availableRiddleIds.Count)];
+
+
+                     // Check if there are more riddles in the game
+                     if (nextRiddleId <= 3) // Adjust the condition based on the total number of riddles
+                     {
+                         // Redirect to the next riddle
+                         return RedirectToAction("Riddle", new { gameId = gameId, riddleId = nextRandomRiddleId });
+                     }
+                     else
+                     {
+                         // Handle the case when all riddles have been completed
+                         ViewBag.Message = "Congratulations! You have completed all the riddles.";
+                         // You can redirect to a different action or display a different view here
+                         return View("FinishGame");
+                     }
+                 }
+                 else
+                 {
+                     // Display the correct answer
+                     ViewBag.Message = "Incorrect answer. The correct answer is: " + riddle.Answer;
+                 }
+             }
+
+             // Pass the riddle data to the view
+             return View(riddle);
+         }*/
+
+
+        /* [HttpGet("/game/{gameId}/riddle/{riddleId}")]
+         public async Task<IActionResult> Riddle(int gameId, int riddleId)
+         {
+             // Check if it's a new game (no riddles assigned to the game yet)
+             bool isNewGame = await _riddleRepository.IsNewGame(gameId);
+
+             if (isNewGame)
+             {
+                 // Assign the riddle ID to the current game
+                 await _riddleRepository.AssignRiddleId(gameId, riddleId);
+
+                 // Get the riddle information based on the gameId and riddleId
+                 var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
+
+                 // Handle the case when the riddle doesn't exist
+                 if (riddle == null)
+                     return NotFound();
+
+                 // Redirect to the view
+                 return View(riddle);
+
+
+             }
+             return RedirectToAction("StartGame");
+
+
+
+         }*/
 
 
 

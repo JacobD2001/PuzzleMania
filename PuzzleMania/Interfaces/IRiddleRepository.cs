@@ -17,6 +17,7 @@ namespace PuzzleMania.Interfaces
         Task<List<int>> GetAvailableRiddleIds();
         Task AssignRiddleId(int gameId, int riddleId);
         Task<bool> IsNewGame(int gameId);
+        Task<List<int>> GetAvailableRiddleIds(int gameId);
 
     }
 }

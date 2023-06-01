@@ -1,5 +1,8 @@
 ﻿@model PuzzleMania.Models.Riddle
-
+@if (ViewBag.Message != null)
+{
+    <p>@ViewBag.Message</p>
+}
 
 <h1>Riddle</h1>
 
@@ -7,7 +10,12 @@
 
 <form method="post" action="/game/@Model.GameId/riddle/@Model.RiddleId">
     <label for="answer">Enter your answer:</label>
-    <input type="text" id="answer" name="answer" required>
+    <input type="text" id="answer" name="answer" value="@ViewBag.SubmittedAnswer" required>
 
     <button type="submit">Submit</button>
 </form>
+
+@if (ViewBag.ShowNextButton == true)
+{
+    <a href="/game/@Model.GameId/riddle/@ViewBag.NextRiddleId">Next</a>
+}

@@ -58,6 +58,18 @@ namespace PuzzleMania.Repositories
         {
             return await _context.Riddles.Select(r => r.RiddleId).ToListAsync();
         }
+        public async Task<List<int>> GetAvailableRiddleIds(int gameId)
+        {
+            // Retrieve the list of riddle IDs that are not assigned to any game or assigned to the specified game
+            var availableRiddleIds = await _context.Riddles
+                .Where(r => r.GameId == gameId)
+                .Select(r => r.RiddleId)
+                .ToListAsync();
+
+            return availableRiddleIds;
+        }
+
+
 
         public async Task AssignRiddleId(int gameId, int riddleId)
         {
@@ -76,6 +88,7 @@ namespace PuzzleMania.Repositories
             return await _context.Riddles.AnyAsync(r => r.GameId == gameId);
         }
 
+       
 
 
     }
