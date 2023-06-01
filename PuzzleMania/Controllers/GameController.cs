@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using PuzzleMania.Helpers;
 using PuzzleMania.Interfaces;
 using PuzzleMania.Models;
@@ -103,8 +104,16 @@ namespace PuzzleMania.Controllers
         }
 
         [HttpGet("/game/{gameId}/riddle/{riddleId}")]
-        public async Task<IActionResult> Riddle(int gameId, int riddleId)
+        public async Task<IActionResult> Riddle(int gameId, int riddleId, string? answer = null)
         {
+            //TEST
+            // Check if the method was accessed from SubmitAnswer
+           // bool accessedFromSubmitAnswer = TempData.ContainsKey("AccessedFromSubmitAnswer") && (bool)TempData["AccessedFromSubmitAnswer"];
+
+            // Clear the TempData value
+            TempData.Remove("AccessedFromSubmitAnswer");
+
+
             // Get the riddle information based on the gameId and riddleId
             var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
 
@@ -112,7 +121,15 @@ namespace PuzzleMania.Controllers
             if (riddle == null)
                 return NotFound();
 
-            // Pass the riddle data to the view
+        /*    if(accessedFromSubmitAnswer)
+            {
+                // Set a ViewBag property to indicate it was accessed from SubmitAnswer
+                ViewBag.AccessedFromSubmitAnswer = true;
+
+                return RedirectToAction("Riddle", new { gameId = gameId, riddleId = riddleId });
+            }*/
+
+         // Pass the riddle data to the view
             return View("Riddle", riddle);
         }
 
@@ -130,6 +147,8 @@ namespace PuzzleMania.Controllers
             bool isCorrect = CheckAnswer(answer, riddle.Answer);
             int nextRandomRiddleId = await GetNextRandomRiddleId(); //gameid
 
+            // Retrieve the completedRiddlesCount from session state
+            int? completedRiddlesCount = _httpContextAccessor.HttpContext.Session.GetInt32("CompletedRiddlesCount") ?? 0;
 
             if (isCorrect)
             {
@@ -137,7 +156,7 @@ namespace PuzzleMania.Controllers
                 ViewBag.Message = "Correct answer!";
 
                 // Increment the count of completed riddles
-                int completedRiddlesCount = Convert.ToInt32(TempData["CompletedRiddlesCount"]) + 1;
+                completedRiddlesCount++;
 
                 // Check if all riddles have been completed
                 if (completedRiddlesCount >= 3) // Adjust the condition based on the desired number of riddles
@@ -152,9 +171,17 @@ namespace PuzzleMania.Controllers
                 ViewBag.ShowNextButton = true;
                 ViewBag.NextRiddleId = nextRandomRiddleId;
 
+
+                // Store the updated completedRiddlesCount in session state
+                _httpContextAccessor.HttpContext.Session.SetInt32("CompletedRiddlesCount", completedRiddlesCount.Value);
+
                 // Redirect to the next riddle
                 //TODO - It should return view here as we don't get the incorrect info answer in the view
                 await _riddleRepository.AssignRiddleId(gameId, nextRandomRiddleId);
+
+                //TEST
+               // TempData["AccessedFromSubmitAnswer"] = true;
+
                 return await Riddle(gameId, nextRandomRiddleId);
             }
             else
@@ -166,6 +193,15 @@ namespace PuzzleMania.Controllers
                 ViewBag.ShowNextButton = true;
                 ViewBag.NextRiddleId = nextRandomRiddleId;
 
+                // Increment the count of completed riddles
+                completedRiddlesCount++;
+
+                if (completedRiddlesCount >= 3) // Adjust the condition based on the desired number of riddles
+                {
+                    // Redirect to the finish game view
+                    return View("FinishGame");
+                }
+
                 //ViewBag.NextRiddleId = riddleId; // Stay on the same riddle
             }
 
@@ -173,9 +209,17 @@ namespace PuzzleMania.Controllers
 
             // Pass the riddle data and the submitted answer to the view
             ViewBag.SubmittedAnswer = answer;
+
+            // Store the current completedRiddlesCount in session state
+            _httpContextAccessor.HttpContext.Session.SetInt32("CompletedRiddlesCount", completedRiddlesCount.Value);
+
             // return View("Riddle", riddleModel);
             //TODO - It should return view here as we don't get the incorrect info answer in the view
             await _riddleRepository.AssignRiddleId(gameId, nextRandomRiddleId);
+
+            //TEST
+            TempData["AccessedFromSubmitAnswer"] = true;
+
             return await Riddle(gameId, nextRandomRiddleId);
         }
 

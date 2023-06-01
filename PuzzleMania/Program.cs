@@ -28,6 +28,9 @@ builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IRiddleRepository, RiddleRepository>();
 builder.Services.AddScoped<IGameRepository, GameRepository>();
 
+//configure session
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession();
 
 var app = builder.Build();
 
@@ -42,9 +45,12 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+
 app.UseRouting();
 
 app.UseAuthorization();
+
+app.UseSession(); //enable session middleware
 
 app.MapControllerRoute(
     name: "default",
