@@ -18,6 +18,7 @@ public class PuzzleManiaContext : IdentityDbContext<PuzzleManiaUser>
     public virtual DbSet<Team> Teams { get; set; }
     public virtual DbSet<Game> Games { get; set; }
     public virtual DbSet<Riddle> Riddles { get; set; }
+    public virtual DbSet<UserPoints> UserPoints { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

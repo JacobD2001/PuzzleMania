@@ -96,33 +96,11 @@ namespace PuzzleMania.Repositories
                 .FirstOrDefaultAsync(t => t.UserId == userId);
         }
 
-        /*    public async Task<IEnumerable<string>> GetTeamMembers(int teamId)
-            {
-                var teamMembers = await _context.Teams
-                    .Where(t => t.TeamId == teamId)
-                    .SelectMany(t => t.UserId)
-                    .Select(u => u .Split('@')[0]) // Extract the email without the "@" part
-                    .ToListAsync();
-
-                return teamMembers;
-            }*/
-
-
         public async Task<IEnumerable<PuzzleManiaUser>> GetTeamMembers(string userId)
         {
             return await _context.Users
                 .Where(u => u.Id == userId).ToListAsync();
         }
-
-
-
-        // Find the user based on the current logged in user
-        /*   public async Task<User> GetUserById(string currentUserId)
-           {
-               return await _context.Users.SingleOrDefaultAsync(u => u.Id == currentUserId);
-           }
-   */
-
 
         public async Task<Team> GetByIdAsync(int teamId)
         {
@@ -131,7 +109,35 @@ namespace PuzzleMania.Repositories
                 .FirstOrDefaultAsync(t => t.TeamId == teamId);
         }
 
+        public async Task<int> GetTotalPointsForTeamAsync(string userId)
+        {
+            var teamPoints = await _context.Teams
+                .Where(x => x.UserId == userId)
+                .FirstOrDefaultAsync();
 
+            return teamPoints.TotalPoints;
+        }
+
+        //method to save the total points for the team
+        public async Task SaveTotalPointsForTeamAsync(string userId, int totalPoints)
+        {
+            var team = await _context.Teams
+                .Where(x => x.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            team.TotalPoints = totalPoints;
+            await _context.SaveChangesAsync();
+        }
+
+        //method that will return the teamid for the user
+        public async Task<int> GetTeamIdForUserAsync(string userId)
+        {
+            var team = await _context.Teams
+                .Where(x => x.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            return team.TeamId;
+        }
 
 
 

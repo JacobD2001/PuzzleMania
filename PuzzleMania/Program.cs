@@ -27,6 +27,7 @@ builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IRiddleRepository, RiddleRepository>();
 builder.Services.AddScoped<IGameRepository, GameRepository>();
+builder.Services.AddScoped<IUserPointsRepository, UserPointsRepository>();
 
 //configure session
 builder.Services.AddDistributedMemoryCache();

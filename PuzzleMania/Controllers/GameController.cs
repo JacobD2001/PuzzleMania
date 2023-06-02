@@ -14,13 +14,15 @@ namespace PuzzleMania.Controllers
         private readonly ITeamRepository _teamRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IRiddleRepository _riddleRepository;
+        private readonly IUserPointsRepository _totalPointsRepository;
 
-        public GameController(IGameRepository gameRepository, ITeamRepository teamRepository, IHttpContextAccessor httpContextAccessor, IRiddleRepository riddleRepository)
+        public GameController(IGameRepository gameRepository, ITeamRepository teamRepository, IHttpContextAccessor httpContextAccessor, IRiddleRepository riddleRepository, IUserPointsRepository totalPointsRepository)
         {
             _gameRepository = gameRepository;
             _teamRepository = teamRepository;
             _httpContextAccessor = httpContextAccessor;
             _riddleRepository = riddleRepository;
+            _totalPointsRepository = totalPointsRepository;
         }
 
         public IActionResult Index()
@@ -143,44 +145,87 @@ namespace PuzzleMania.Controllers
             if (riddle == null)
                 return NotFound();
 
+            //Get the current user Id
+            var curUserId = _httpContextAccessor.HttpContext.User.GetUserId();
+
+            //Get the value of userPoints from currentstate
+            int? userPoints = _httpContextAccessor.HttpContext.Session.GetInt32("UserPoints");
+
+            bool isFirstAccessed = IsFirstTimeAccessed();
+
+            // Check if userPoints is null (first iteration of SubmitAnswer) //TODO - logic here
+            if (isFirstAccessed)
+            {
+                // Retrieve the initial user points value from the database
+                userPoints = await _totalPointsRepository.GetTotalPointsForUserAsync(curUserId);
+
+                // Store the initial user points in session state
+                _httpContextAccessor.HttpContext.Session.SetInt32("UserPoints", userPoints.Value);
+
+                // Remove the flag from session state for each new game session
+                //_httpContextAccessor.HttpContext.Session.Remove("FirstTimeAccess");
+            }
+            else
+            {
+                // Retrieve the user points from session state
+                userPoints = _httpContextAccessor.HttpContext.Session.GetInt32("UserPoints");
+            }
+
             // Check if the submitted answer is correct
             bool isCorrect = CheckAnswer(answer, riddle.Answer);
-            int nextRandomRiddleId = await GetNextRandomRiddleId(); //gameid
+
+            //Get new random riddle
+            int nextRandomRiddleId = await GetNextRandomRiddleId(); 
 
             // Retrieve the completedRiddlesCount from session state
             int? completedRiddlesCount = _httpContextAccessor.HttpContext.Session.GetInt32("CompletedRiddlesCount") ?? 0;
+
+            // Increment the count of completed riddles
+            completedRiddlesCount++;
+
+            // Store the current completedRiddlesCount in session state
+            _httpContextAccessor.HttpContext.Session.SetInt32("CompletedRiddlesCount", completedRiddlesCount.Value);
+
+
+            // Retrieve the team points from the database
+            int? teamPoints = await _teamRepository.GetTotalPointsForTeamAsync(curUserId); //tutaj bierze teampointsy gdzie do teamu nie jest jeszcze nic przypisanego daltego teampoints = 0
+
+            //conversion int? to int
+            int pointsToSave = teamPoints ?? 0;
 
             if (isCorrect)
             {
                 // Display a success message
                 ViewBag.Message = "Correct answer!";
 
-                // Increment the count of completed riddles
-                completedRiddlesCount++;
+
+                //increment points by 10
+                userPoints += 10;
+
+                // Store the changed user points in session state
+                _httpContextAccessor.HttpContext.Session.SetInt32("UserPoints", userPoints.Value);
 
                 // Check if all riddles have been completed
-                if (completedRiddlesCount >= 3) // Adjust the condition based on the desired number of riddles
+                if (completedRiddlesCount >= 3) 
                 {
-                    // Redirect to the finish game view
-                    return View("FinishGame");
-                }
+                    completedRiddlesCount = 0;
+                    // Store the current completedRiddlesCount in session state
+                    _httpContextAccessor.HttpContext.Session.SetInt32("CompletedRiddlesCount", completedRiddlesCount.Value);
+                    teamPoints = teamPoints + userPoints;
+                    await _teamRepository.SaveTotalPointsForTeamAsync(curUserId, pointsToSave);
 
-                // Proceed to the next random riddle
+                    userPoints = 0;
+                    // Redirect to the finish game view
+                    return RedirectToAction("FinishGame");
+                }
 
                 // Set the ViewBag properties
                 ViewBag.ShowNextButton = true;
                 ViewBag.NextRiddleId = nextRandomRiddleId;
 
 
-                // Store the updated completedRiddlesCount in session state
-                _httpContextAccessor.HttpContext.Session.SetInt32("CompletedRiddlesCount", completedRiddlesCount.Value);
-
-                // Redirect to the next riddle
-                //TODO - It should return view here as we don't get the incorrect info answer in the view
+                //assaigning next riddle to a game
                 await _riddleRepository.AssignRiddleId(gameId, nextRandomRiddleId);
-
-                //TEST
-               // TempData["AccessedFromSubmitAnswer"] = true;
 
                 return await Riddle(gameId, nextRandomRiddleId);
             }
@@ -193,140 +238,84 @@ namespace PuzzleMania.Controllers
                 ViewBag.ShowNextButton = true;
                 ViewBag.NextRiddleId = nextRandomRiddleId;
 
-                // Increment the count of completed riddles
-                completedRiddlesCount++;
+                userPoints -= 10;
 
-                if (completedRiddlesCount >= 3) // Adjust the condition based on the desired number of riddles
+                // Store the current user points in session state
+                _httpContextAccessor.HttpContext.Session.SetInt32("UserPoints", userPoints.Value);
+
+                if (completedRiddlesCount >= 3 || userPoints == 0) 
                 {
-                    // Redirect to the finish game view
-                    return View("FinishGame");
+                    completedRiddlesCount = 0;
+                    // Store the current completedRiddlesCount in session state
+                    _httpContextAccessor.HttpContext.Session.SetInt32("CompletedRiddlesCount", completedRiddlesCount.Value);
+                    teamPoints = teamPoints + userPoints;
+                    await _teamRepository.SaveTotalPointsForTeamAsync(curUserId, pointsToSave);
+                    userPoints = 0;
+                    // Redirect to the finish game action
+                    return RedirectToAction("FinishGame");
                 }
-
-                //ViewBag.NextRiddleId = riddleId; // Stay on the same riddle
             }
 
-    
 
-            // Pass the riddle data and the submitted answer to the view
-            ViewBag.SubmittedAnswer = answer;
-
-            // Store the current completedRiddlesCount in session state
-            _httpContextAccessor.HttpContext.Session.SetInt32("CompletedRiddlesCount", completedRiddlesCount.Value);
-
-            // return View("Riddle", riddleModel);
-            //TODO - It should return view here as we don't get the incorrect info answer in the view
             await _riddleRepository.AssignRiddleId(gameId, nextRandomRiddleId);
-
-            //TEST
-            TempData["AccessedFromSubmitAnswer"] = true;
-
             return await Riddle(gameId, nextRandomRiddleId);
         }
+
+        private bool IsFirstTimeAccessed()
+        {
+            bool isFirstTime = false;
+
+            // Check if the flag exists in session state
+            if (!_httpContextAccessor.HttpContext.Session.TryGetValue("FirstTimeAccess", out byte[] flag))
+            {
+                // Flag doesn't exist, it's the first time accessing
+                isFirstTime = true;
+
+                // Set the flag in session state
+                _httpContextAccessor.HttpContext.Session.Set("FirstTimeAccess", new byte[1]);
+            }
+
+
+
+            return isFirstTime;
+        }
+
+
+
+
 
         [HttpGet]
         public async Task<IActionResult> FinishGame()
         {
-            /*        // Get the current team ID
-                    var teamId = await _teamRepository.GetTeamIdByUserId(_httpContextAccessor.HttpContext.User.GetUserId());
+            var curUserId = _httpContextAccessor.HttpContext.User.GetUserId();
 
-                    // Get the team name
-                    var teamName = await _teamRepository.GetTeamNameById(teamId);
 
-                    // Get the team score
-                    var teamScore = await _gameRepository.GetTeamScore(teamId);
+            if (!User.Identity.IsAuthenticated)
+            {
+                TempData["ErrorMessage"] = $"You must be logged in to access this page.";
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+            }
 
-                    // Pass the team name and score to the view
-                    var finishGameViewModel = new FinishGameViewModel
-                    {
-                        TeamName = teamName,
-                        TeamScore = teamScore
-                    };
-        */
-            //return View(finishGameViewModel);
-            return View();
+            var team = await _teamRepository.GetTeamByUserId(curUserId);
+            return View(team);
         }
 
-        //httpget i post w jednym rozdzielic todo
-        /* [HttpGet("/game/{gameId}/riddle/{riddleId}")]
-         public async Task<IActionResult> Riddle(int gameId, int riddleId, string usersAnswer)
-         {
-             // Get the riddle information based on the gameId and riddleId
-             var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
-
-             // Handle the case when the riddle doesn't exist
-             if (riddle == null)
-                 return NotFound();
-
-             // Check if the user has submitted an answer
-             string submittedAnswer = usersAnswer;
-
-             if (!string.IsNullOrEmpty(submittedAnswer))
-             {
-                 // Check if the submitted answer is correct
-                 bool isCorrect = CheckAnswer(submittedAnswer, riddle.Answer);
-
-                 if (isCorrect)
-                 {
-                     // Display a success message
-                     ViewBag.Message = "Correct answer!";
-
-                     // Increment the count of completed riddles
-                     int completedRiddlesCount = Convert.ToInt32(TempData["CompletedRiddlesCount"]) + 1;
-
-                     // Check if all riddles have been completed
-                     if (completedRiddlesCount >= 3) // Adjust the condition based on the desired number of riddles
-                     {
-                         // Redirect to the finish game view
-                         return RedirectToAction("FinishGame");
-                     }
-
-                     // Proceed to the next random riddle
-                     int nextRandomRiddleId = await GetNextRandomRiddleId(); //gameid
-
-                     // Redirect to the next riddle
-                     return RedirectToAction("Riddle", new { gameId = gameId, riddleId = nextRandomRiddleId });
-                 }
-                 else
-                 {
-                     // Display the correct answer
-                     ViewBag.Message = "Incorrect answer. The correct answer is: " + riddle.Answer;
-                 }
-             }
-             else
-             {
-                 // Reset the count of completed riddles when starting a new riddle
-                 TempData["CompletedRiddlesCount"] = 0;
-             }
-
-             // Pass the riddle data and the submitted answer to the view
-             ViewBag.SubmittedAnswer = submittedAnswer;
-             return View(riddle);
-         }*/
-
-
-
-
+        //this method check if the answer is correct
         private bool CheckAnswer(string submittedAnswer, string correctAnswer)
         {
-            // Implement your answer validation logic here
-            // Compare the submitted answer with the correct answer and return true if they match
-            // You can use case-insensitive comparison or apply any specific validation rules you need
-
             bool isCorrect = string.Equals(submittedAnswer, correctAnswer, StringComparison.OrdinalIgnoreCase);
             return isCorrect;
 
         }
 
-        private async Task<int> GetNextRandomRiddleId() //gameid
+        //this method selects the next random riddle
+        private async Task<int> GetNextRandomRiddleId() 
         {
-            List<int> availableRiddleIds = await _riddleRepository.GetAvailableRiddleIds(); //gameid
-
+            List<int> availableRiddleIds = await _riddleRepository.GetAvailableRiddleIds();
 
             if (availableRiddleIds.Count == 0)
-            {
-                // Handle the case when no riddles are available
                 throw new Exception("No riddles are available.");
-            }
+
 
             // Select a random riddle ID
             Random random = new Random();
@@ -336,121 +325,6 @@ namespace PuzzleMania.Controllers
 
             return randomRiddleId;
         }
-
-
-        /* [HttpGet("/game/{gameId}/riddle/{riddleId}")]
-         public async Task<IActionResult> Riddle(int gameId, int riddleId)
-         {
-             // Get the riddle information based on the gameId and riddleId
-             var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
-
-             // Handle the case when the riddle doesn't exist
-             if (riddle == null)
-                 return NotFound();
-
-             // Check if the user has submitted an answer
-             string submittedAnswer = Request.Form["answer"];
-
-             if (!string.IsNullOrEmpty(submittedAnswer))
-             {
-                 // Check if the submitted answer is correct
-                 bool isCorrect = CheckAnswer(submittedAnswer, riddle.Answer);
-
-                 if (isCorrect)
-                 {
-                     // Display a success message
-                     ViewBag.Message = "Correct answer!";
-
-                     // Proceed to the next riddle
-                     List<int> availableRiddleIds = await _riddleRepository.GetAvailableRiddleIds();
-
-                     if (availableRiddleIds.Count == 0)
-                         // Handle the case when no riddles are available
-                         return NotFound();
-
-                     Random random = new Random();
-                     int nextRandomRiddleId = availableRiddleIds[random.Next(availableRiddleIds.Count)];
-
-
-                     // Check if there are more riddles in the game
-                     if (nextRiddleId <= 3) // Adjust the condition based on the total number of riddles
-                     {
-                         // Redirect to the next riddle
-                         return RedirectToAction("Riddle", new { gameId = gameId, riddleId = nextRandomRiddleId });
-                     }
-                     else
-                     {
-                         // Handle the case when all riddles have been completed
-                         ViewBag.Message = "Congratulations! You have completed all the riddles.";
-                         // You can redirect to a different action or display a different view here
-                         return View("FinishGame");
-                     }
-                 }
-                 else
-                 {
-                     // Display the correct answer
-                     ViewBag.Message = "Incorrect answer. The correct answer is: " + riddle.Answer;
-                 }
-             }
-
-             // Pass the riddle data to the view
-             return View(riddle);
-         }*/
-
-
-        /* [HttpGet("/game/{gameId}/riddle/{riddleId}")]
-         public async Task<IActionResult> Riddle(int gameId, int riddleId)
-         {
-             // Check if it's a new game (no riddles assigned to the game yet)
-             bool isNewGame = await _riddleRepository.IsNewGame(gameId);
-
-             if (isNewGame)
-             {
-                 // Assign the riddle ID to the current game
-                 await _riddleRepository.AssignRiddleId(gameId, riddleId);
-
-                 // Get the riddle information based on the gameId and riddleId
-                 var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
-
-                 // Handle the case when the riddle doesn't exist
-                 if (riddle == null)
-                     return NotFound();
-
-                 // Redirect to the view
-                 return View(riddle);
-
-
-             }
-             return RedirectToAction("StartGame");
-
-
-
-         }*/
-
-
-
-
-        /*     [HttpGet("/game/{gameId}/riddle/{riddleId}")]
-             public async Task<IActionResult> Riddle(int gameId, int riddleId)
-             {
-                 // Get the riddle information based on the gameId and riddleId
-                 var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
-
-                 if (riddle == null)           
-                     return NotFound();
-
-
-                 // Pass the riddle data to the view
-                 return View(riddle);
-             }*/
-
-
-
-
-
-
-
-
 
 
     }

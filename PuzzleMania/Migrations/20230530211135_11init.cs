@@ -11,7 +11,7 @@ namespace PuzzleMania.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             //fail bc there is already a gameid in riddles to fix later TODO
-            migrationBuilder.AddColumn<int>(
+    /*        migrationBuilder.AddColumn<int>(
                 name: "GameId",
                 table: "Riddles",
                 type: "int",
@@ -29,7 +29,7 @@ namespace PuzzleMania.Migrations
                 column: "GameId",
                 principalTable: "Games",
                 principalColumn: "GameId",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade);*/
         }
 
         /// <inheritdoc />

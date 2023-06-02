@@ -34,8 +34,6 @@ namespace PuzzleMania.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
 
-            //var email = await _profileRepository.GetEmailOfCurrentUser(User);
-
             var profileViewModel = new ProfileViewModel
             {
                 Email = currentUser.Email,

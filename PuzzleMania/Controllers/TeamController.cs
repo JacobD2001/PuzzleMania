@@ -61,7 +61,6 @@ namespace PuzzleMania.Controllers
         }
 
         //this method shows the team stats(names) and gets called when there are incomplete teams and user has to choose a team
-        //TODO - this method need change name to TeamList and it will be called when player has not yet joined a team && there are not full teams)
         [HttpGet]
         public async Task<IActionResult> ChooseTeam()
         {
@@ -78,7 +77,8 @@ namespace PuzzleMania.Controllers
         [HttpGet]
         public async Task<IActionResult> QRCode(string teamName)
         {
-            var teamToJoin = await _teamRepository.GetTeamByName(teamName);  // Retrieve the team the user wants to join based on their selection
+            // Retrieve the team the user wants to join based on their selection
+            var teamToJoin = await _teamRepository.GetTeamByName(teamName); 
 
             if (teamToJoin != null && teamToJoin.TeamSize < 2)
             {
@@ -107,7 +107,7 @@ namespace PuzzleMania.Controllers
 
 
 
-        //TODO - Do team statsow musi byc przekazane teamId
+        //TODO - Do team statsow musi byc przekazane teamId - TODO TO WORK WITH QR CODE DIRECTLY
         [HttpGet]
             public async Task<IActionResult> TeamStats(int teamId) //tutaj teamId = 0 tutaj error
             {
@@ -157,7 +157,7 @@ namespace PuzzleMania.Controllers
 
                 if (currentUserId != null)
                 {
-                    var teamToJoin = await _teamRepository.GetTeamByName(teamName);  // Retrieve the team the user wants to join based on their selection
+                    var teamToJoin = await _teamRepository.GetTeamByName(teamName);  
 
                     if (teamToJoin != null && teamToJoin.TeamSize < 2)
                     {

@@ -18,6 +18,10 @@ namespace PuzzleMania.Interfaces
         Task<Team> GetTeamByUserId(string userId);
         Task<IEnumerable<PuzzleManiaUser>> GetTeamMembers(string userId);
         Task<Team> GetByIdAsync(int teamId);
+        Task<int> GetTotalPointsForTeamAsync(string userId);
+        Task SaveTotalPointsForTeamAsync(string userId, int totalPoints);
+        Task<int> GetTeamIdForUserAsync(string userId);
+
 
 
 

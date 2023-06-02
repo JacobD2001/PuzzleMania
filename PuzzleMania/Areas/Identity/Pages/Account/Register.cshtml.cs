@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using PuzzleMania.Areas.Identity.Data;
+using PuzzleMania.Interfaces;
+using PuzzleMania.Models;
 
 namespace PuzzleMania.Areas.Identity.Pages.Account
 {
@@ -30,13 +32,16 @@ namespace PuzzleMania.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<PuzzleManiaUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        //test
+        private readonly IUserPointsRepository _userPointsRepository;
 
         public RegisterModel(
             UserManager<PuzzleManiaUser> userManager,
             IUserStore<PuzzleManiaUser> userStore,
             SignInManager<PuzzleManiaUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IUserPointsRepository userPointsRepository)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +49,7 @@ namespace PuzzleMania.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _userPointsRepository = userPointsRepository;
         }
 
         /// <summary>
@@ -114,6 +120,15 @@ namespace PuzzleMania.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
+
+                //adding initial points to the newly registered user
+                var UserPoints = new UserPoints()
+                {
+                    UserId = user.Id,
+                    Points = 10
+                };
+                
+               _userPointsRepository.Add(UserPoints);
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);

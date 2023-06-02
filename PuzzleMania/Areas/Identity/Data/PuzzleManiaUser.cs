@@ -7,7 +7,6 @@ using PuzzleMania.Models;
 
 namespace PuzzleMania.Areas.Identity.Data;
 
-// Add profile data for application users by adding properties to the PuzzleManiaUser class
 public class PuzzleManiaUser : IdentityUser
 {
     /* public int? TeamId { get; set; }
