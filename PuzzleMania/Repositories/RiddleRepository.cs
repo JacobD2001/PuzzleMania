@@ -42,10 +42,10 @@ namespace PuzzleMania.Repositories
             return await _context.Riddles.ToListAsync();
         }
 
-        public async Task<Riddle> GetByIdAsync(int gameId, int riddleId)
+        public async Task<Riddle> GetByIdAsync(int riddleId)
         {
             return await _context.Riddles
-                .FirstOrDefaultAsync(r => r.GameId == gameId && r.RiddleId == riddleId);
+                .FirstOrDefaultAsync(r => r.RiddleId == riddleId);
         }
 
         public async Task<int?> GetRiddleIdByGameId(int gameId)

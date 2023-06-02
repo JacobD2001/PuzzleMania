@@ -12,7 +12,7 @@ namespace PuzzleMania.Interfaces
         bool Delete(Riddle riddle);
         bool Save();
         Task<IEnumerable<Riddle>> GetAll();
-        Task<Riddle> GetByIdAsync(int gameId, int riddleId);
+        Task<Riddle> GetByIdAsync(int riddleId);
         Task<int?> GetRiddleIdByGameId(int gameId);
         Task<List<int>> GetAvailableRiddleIds();
         Task AssignRiddleId(int gameId, int riddleId);

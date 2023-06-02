@@ -108,38 +108,23 @@ namespace PuzzleMania.Controllers
         [HttpGet("/game/{gameId}/riddle/{riddleId}")]
         public async Task<IActionResult> Riddle(int gameId, int riddleId, string? answer = null)
         {
-            //TEST
-            // Check if the method was accessed from SubmitAnswer
-           // bool accessedFromSubmitAnswer = TempData.ContainsKey("AccessedFromSubmitAnswer") && (bool)TempData["AccessedFromSubmitAnswer"];
-
-            // Clear the TempData value
-            TempData.Remove("AccessedFromSubmitAnswer");
-
-
             // Get the riddle information based on the gameId and riddleId
-            var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
+            var riddle = await _riddleRepository.GetByIdAsync(riddleId);
 
             // Handle the case when the riddle doesn't exist
             if (riddle == null)
-                return NotFound();
-
-        /*    if(accessedFromSubmitAnswer)
-            {
-                // Set a ViewBag property to indicate it was accessed from SubmitAnswer
-                ViewBag.AccessedFromSubmitAnswer = true;
-
-                return RedirectToAction("Riddle", new { gameId = gameId, riddleId = riddleId });
-            }*/
+                return NotFound(); 
 
          // Pass the riddle data to the view
             return View("Riddle", riddle);
         }
 
+        //TODO - Finish this method so 1. fix this isfirsttimeaccessed 2. fix the points counter
         [HttpPost("/game/{gameId}/riddle/{riddleId}")]
         public async Task<IActionResult> SubmitAnswer(int gameId, int riddleId, string answer)
         {
             // Get the riddle information based on the gameId and riddleId
-            var riddle = await _riddleRepository.GetByIdAsync(gameId, riddleId);
+            var riddle = await _riddleRepository.GetByIdAsync(riddleId);
 
             // Handle the case when the riddle doesn't exist
             if (riddle == null)

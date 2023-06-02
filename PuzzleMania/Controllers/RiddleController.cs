@@ -9,6 +9,7 @@ namespace PuzzleMania.Controllers
     [ApiController]
     public class RiddleController : ControllerBase
     {
+        //TODO - fix REST API its because of the gameId might do it nullable and than see
         private readonly IRiddleRepository _riddleRepository;
         public RiddleController(IRiddleRepository riddleRepository)
         {
@@ -53,9 +54,9 @@ namespace PuzzleMania.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateEdit(Riddle riddle)
         {
-            if(riddle.RiddleId == 0)
+            if (riddle.RiddleId == 0)
             {
-                 _riddleRepository.Add(riddle);
+                _riddleRepository.Add(riddle);
                 return Ok(riddle);
             }
             else
@@ -73,7 +74,7 @@ namespace PuzzleMania.Controllers
         {
             var result = await _riddleRepository.GetByIdAsync(gameId, id);
 
-            if(result == null)
+            if (result == null)
                 return NotFound();
 
             _riddleRepository.Delete(result);
@@ -83,5 +84,5 @@ namespace PuzzleMania.Controllers
 
     }
 
-    
+
 }
